@@ -10,31 +10,6 @@ int cornersOfPaper[4][2] = {{759, 797}, {2865, 406}, {3561, 1912}, {965, 2576}};
 double targetWidth = 11;
 double targetHeight = 8.5;
 
-cv::Mat processImage(cv::Mat image) {
-    // Convert to grayscale
-    cv::cvtColor(image, image, cv::ColorConversionCodes::COLOR_BGR2GRAY);
-
-    // Blur
-    cv::GaussianBlur(image, image, cv::Size(cv::Point2i(9, 9)), 0.0);
-
-    cv::threshold(image, image, threshold, 255, cv::ThresholdTypes::THRESH_BINARY_INV);
-
-    std::vector<std::vector<cv::Point>> contours;
-    //cv::OutputArray fdsafdss;
-    cv::findContours(image, contours, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
-
-    // Covert back to rgb so we can draw the contours in a different color
-    cv::cvtColor(image, image, cv::ColorConversionCodes::COLOR_GRAY2BGR);
-
-    for (auto contour : contours) {
-        for (int i = 0; i < contour.size() - 1; i++) {
-            cv::line(image, contour[i], contour[i+1], 0x00FFFF, 2);
-        }
-    }
-
-    return image;
-}
-
 std::vector<cv::Point2f> findCornersOfTarget() {
     std::vector<cv::Point2f> out;
 
@@ -46,15 +21,45 @@ std::vector<cv::Point2f> findCornersOfTarget() {
 }
 
 cv::Mat transformImage(cv::Mat image) {
+    double aspectRatio = targetWidth / targetHeight;
+    std::cout << "ASPECT RATIO" << aspectRatio << std::endl;
+
     std::vector<cv::Point2f> destinationPoints;
     destinationPoints.push_back(cv::Point2f(0, 0));
     destinationPoints.push_back(cv::Point2f(1500, 0));
-    destinationPoints.push_back(cv::Point2f(1500, 1500));
-    destinationPoints.push_back(cv::Point2f(0, 1500));
+    destinationPoints.push_back(cv::Point2f(1500, 1500 / aspectRatio));
+    destinationPoints.push_back(cv::Point2f(0, 1500 / aspectRatio));
 
     cv::Mat transform = cv::getPerspectiveTransform(findCornersOfTarget(), destinationPoints, cv::DECOMP_LU);
 
-    cv::warpPerspective(image, image, transform, cv::Size(1500, 1500));
+    cv::warpPerspective(image, image, transform, cv::Size(1500, 1500/aspectRatio));
+
+    return image;
+}
+
+cv::Mat processImage(cv::Mat image) {
+    // Convert to grayscale
+    cv::cvtColor(image, image, cv::ColorConversionCodes::COLOR_BGR2GRAY);
+
+    // Blur
+    cv::GaussianBlur(image, image, cv::Size(cv::Point2i(15, 15)), 0.0);
+
+    cv::threshold(image, image, threshold, 255, cv::ThresholdTypes::THRESH_BINARY_INV);
+
+    //image = transformImage(image);
+
+    std::vector<std::vector<cv::Point>> contours;
+    //cv::OutputArray fdsafdss;
+    cv::findContours(image, contours, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
+
+    // Covert back to rgb so we can draw the contours in a different color
+    cv::cvtColor(image, image, cv::ColorConversionCodes::COLOR_GRAY2BGR);
+
+    for (auto contour : contours) {
+        for (int i = 0; i < contour.size() - 1; i++) {
+            cv::line(image, contour[i], contour[i+1], cv::Scalar(0, 255, 0), 2);
+        }
+    }
 
     return image;
 }
