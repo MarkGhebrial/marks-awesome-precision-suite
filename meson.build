@@ -4,7 +4,4 @@ project('MAPS', 'cpp',
 
 opencv_dep = dependency('opencv4')
 
-exe = executable('MAPS', 'maps.cpp',
-  install : true, dependencies : opencv_dep)
-
-test('basic', exe)
+subdir('src')

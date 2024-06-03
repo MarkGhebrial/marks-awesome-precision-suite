@@ -1,6 +1,8 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 
+#include "util.h"
+
 cv::Mat sourceImage;
 int threshold = 30;
 
@@ -69,6 +71,8 @@ void reprocessImage(int, void*) {
 }
 
 int main(int argc, char** argv) {
+    random_function();
+
     // Check if image path is provided as a command line argument
     if (argc != 2) {
         std::cout << "Usage: ./DisplayImage <Image_Path>" << std::endl;
