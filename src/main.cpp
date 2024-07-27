@@ -71,14 +71,41 @@ cv::Mat transformImage(cv::Mat image, Contour2f corners) {
     destinationPoints.push_back(cv::Point2f(1500, 1500 / aspectRatio));
     destinationPoints.push_back(cv::Point2f(0, 1500 / aspectRatio));
 
-    cv::Mat transform = cv::getPerspectiveTransform(corners, destinationPoints, cv::DECOMP_LU);
+    // Make sure the corners are sorted in the right spatial order
+    Contour2f sortedCorners(4);
+    cv::Point2f center;
+    float sumx = 0, sumy = 0;
+    for (cv::Point2f point : corners) {
+        sumx += point.x;
+        sumy += point.y;
+    }
+    center.x = sumx / corners.size();
+    center.y = sumy / corners.size();
+    for (cv::Point2f point : corners) {
+        if (point.x <= center.x && point.y <= center.y) {
+            sortedCorners[0] = point;
+        } else if (point.x >= center.x && point.y <= center.y) {
+            sortedCorners[1] = point;
+        } else if (point.x >= center.x && point.y >= center.y) {
+            sortedCorners[2] = point;
+        } else {
+            sortedCorners[3] = point;
+        }
+    }
+
+    cv::Mat transform = cv::getPerspectiveTransform(sortedCorners, destinationPoints, cv::DECOMP_LU);
 
     cv::warpPerspective(image, image, transform, cv::Size(1500, 1500/aspectRatio));
 
     return image;
 }
 
-cv::Mat processImage(cv::Mat image) {
+struct processImageResults {
+    cv::Mat image;
+    Contour2f corners;
+};
+
+processImageResults processImage(cv::Mat image) {
     // Convert to grayscale
     cv::cvtColor(image, image, cv::ColorConversionCodes::COLOR_BGR2GRAY);
 
@@ -114,11 +141,14 @@ cv::Mat processImage(cv::Mat image) {
         }
     }
 
-    return image;
+    return {image, corners};
 }
 
 void updateImage(int, void*) {
-    cv::imshow("Display window", processImage(sourceImage));
+    processImageResults results = processImage(sourceImage);
+    cv::imshow("Display window", results.image);
+
+    cv::imshow("Transformed image", transformImage(sourceImage, results.corners));
 }
 
 int main(int argc, char** argv) {
@@ -140,24 +170,18 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    cv::namedWindow("Contrasted image", cv::WINDOW_NORMAL);
-
-    cv::Mat contrastedImage;
-    sourceImage.convertTo(contrastedImage, -1, 0.5, 1.5);
-    cv::imshow("Contrasted image", contrastedImage);
-
-    cv::Mat image = processImage(sourceImage);
+    processImageResults results = processImage(sourceImage);
 
     // Create a window
     cv::namedWindow("Display window", cv::WINDOW_NORMAL);
     cv::createTrackbar("Threshold", "Display window", &threshold, 255, updateImage);
     
     // Create a window for the transformed image
-    // c                v::namedWindow("Transformed image", cv::WINDOW_NORMAL);
-    // cv::imshow("Transformed image", transformImage(sourceImage));
+    cv::namedWindow("Transformed image", cv::WINDOW_NORMAL);
+    cv::imshow("Transformed image", transformImage(sourceImage, results.corners));
 
     // Show our image inside the created window
-    cv::imshow("Display window", image);
+    cv::imshow("Display window", results.image);
 
     // Wait for any keystroke in the window
     cv::waitKey(0);
