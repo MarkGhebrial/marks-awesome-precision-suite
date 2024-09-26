@@ -2,9 +2,9 @@
 #include <iostream>
 #include <math.h>
 
-void erodeThenDilate(cv::Mat inputImage, cv::Mat outputImage) {
+void erodeThenDilate(const cv::Mat& inputImage, cv::Mat outputImage, int size) {
     // Circle with diameter of 30
-    auto kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(30, 30));
+    auto kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(size, size));
 
     cv::erode(inputImage, outputImage, kernel);
     cv::dilate(outputImage, outputImage, kernel);
@@ -22,5 +22,13 @@ double angleBetweenPoints(cv::Point p1, cv::Point corner, cv::Point p3) {
     return std::acos(v1.dot(v2)/(v1length*v2length));
 }
 
-// Plenary power
-// Name one other beauro under the Dept. of the Interior
+void contrast(const cv::Mat& inputImage, cv::Mat outputImage, double alpha, double beta) {
+    for (int i = 0; i < inputImage.rows; i++) {
+        for (int j = 0; j < inputImage.cols; j++) {
+            for( int c = 0; c < 3; c++ ) {
+                outputImage.at<cv::Vec3b>(i, j)[c] =
+                    cv::saturate_cast<uchar>(alpha*inputImage.at<cv::Vec3b>(i,j)[c] + beta);
+            }
+        }
+    }
+}

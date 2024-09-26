@@ -13,8 +13,6 @@ using std::cout, std::endl;
 cv::Mat sourceImage;
 int threshold = 159;
 
-int cornersOfPaper[4][2] = {{759, 797}, {2865, 406}, {3561, 1912}, {965, 2576}};
-
 // The width and height of your paper target. These can be in any unit, but the units must be the same.
 double targetWidth = 11;
 double targetHeight = 8.5;
@@ -31,15 +29,6 @@ vector<cv::Point2f> findCornersOfTarget(vector<Contour> contours) {
         if (simplifiedContour.size() == 4) {
             quadrilaterals.push_back(simplifiedContour);
         }
-
-        // vector<double> angles;
-        // for (int i = 0; i < simplifiedContour.size(); i++) {
-
-        //     double angle = angleBetweenPoints(simplifiedContour[(i-1) % simplifiedContour.size()], simplifiedContour[i], simplifiedContour[(i+1) % simplifiedContour.size()]);
-        //     std::cout << "Degrees for contour " << i << ": " << angle * 180.0 / 3.14159265358979323846 << std::endl;
-
-        //     cv::line(image, simplifiedContour[i], simplifiedContour[(i+1) % simplifiedContour.size()], cv::Scalar(0, 255, 0), 5);
-        // }
     }
 
     // Find the contour with the biggest area
@@ -71,7 +60,9 @@ cv::Mat transformImage(cv::Mat image, Contour2f corners) {
     destinationPoints.push_back(cv::Point2f(1500, 1500 / aspectRatio));
     destinationPoints.push_back(cv::Point2f(0, 1500 / aspectRatio));
 
-    // Make sure the corners are sorted in the right spatial order
+    // Make sure the corners are sorted in the right spatial order. We do this by
+    // computing the "average location" of all the points and seeing which quadrant
+    // each point lies in relative to that center.
     Contour2f sortedCorners(4);
     cv::Point2f center;
     float sumx = 0, sumy = 0;
@@ -82,13 +73,13 @@ cv::Mat transformImage(cv::Mat image, Contour2f corners) {
     center.x = sumx / corners.size();
     center.y = sumy / corners.size();
     for (cv::Point2f point : corners) {
-        if (point.x <= center.x && point.y <= center.y) {
+        if (point.x <= center.x && point.y <= center.y) {        // Top left quadrant
             sortedCorners[0] = point;
-        } else if (point.x >= center.x && point.y <= center.y) {
+        } else if (point.x >= center.x && point.y <= center.y) { // Top right quadrant
             sortedCorners[1] = point;
-        } else if (point.x >= center.x && point.y >= center.y) {
+        } else if (point.x >= center.x && point.y >= center.y) { // Bottom right quadrant
             sortedCorners[2] = point;
-        } else {
+        } else {                                                 // Bottom left quadrant
             sortedCorners[3] = point;
         }
     }
@@ -113,7 +104,7 @@ processImageResults processImage(cv::Mat image) {
     cv::GaussianBlur(image, image, cv::Size(cv::Point2i(15, 15)), 0.0);
 
     cv::threshold(image, image, threshold, 255, cv::ThresholdTypes::THRESH_BINARY);
-    erodeThenDilate(image, image);
+    erodeThenDilate(image, image, 30);
 
     //image = transformImage(image);
 
@@ -132,8 +123,6 @@ processImageResults processImage(cv::Mat image) {
         }
     }
 
-    cout << corners.size() << endl;
-
     // Draw the borders of the target onto the image
     for (auto contour : corners) {
         for (int i = 0; i < corners.size(); i++) {
@@ -144,11 +133,36 @@ processImageResults processImage(cv::Mat image) {
     return {image, corners};
 }
 
-void updateImage(int, void*) {
+void updateImages(int, void*) {
     processImageResults results = processImage(sourceImage);
-    cv::imshow("Display window", results.image);
+    cv::imshow("Processed image", results.image);
 
-    cv::imshow("Transformed image", transformImage(sourceImage, results.corners));
+    cv::Mat transformedImage = transformImage(sourceImage, results.corners);
+    // Convert to grayscale
+    cv::cvtColor(transformedImage, transformedImage, cv::ColorConversionCodes::COLOR_BGR2GRAY);
+    //cv::GaussianBlur(transformedImage, transformedImage, cv::Size(15, 15), 0.0);
+    //cv::threshold(transformedImage, transformedImage, 165, 255, cv::ThresholdTypes::THRESH_BINARY_INV);
+    
+    erodeThenDilate(transformedImage, transformedImage, 10);
+    //cv::Canny(transformedImage, transformedImage, 50, 150);
+    
+    cv::SimpleBlobDetector::Params params;
+    params.minThreshold = 50;
+    params.maxThreshold = 230;
+    params.filterByConvexity = false;
+    params.filterByCircularity = false;
+
+    cv::Ptr<cv::SimpleBlobDetector> blobDetector = cv::SimpleBlobDetector::create(params);
+
+    std::vector<cv::KeyPoint> keypoints;
+    blobDetector->detect(transformedImage, keypoints);
+    cv::drawKeypoints(transformedImage, keypoints, transformedImage, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    
+    // vector<Contour> contours;
+    // cv::findContours(transformedImage, contours, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
+    // cv::drawContours(transformedImage, contours, -1, cv::Scalar(255, 255, 0), 5);
+
+    cv::imshow("Transformed image", transformedImage);
 }
 
 int main(int argc, char** argv) {
@@ -161,27 +175,26 @@ int main(int argc, char** argv) {
     // Read the image file
     sourceImage = cv::imread(argv[1]);
 
-    // Scale the image so it fits on my screen 
-    //cv::resize(sourceImage, sourceImage, cv::Size(), 0.2, 0.2, cv::INTER_LINEAR);
-
     // Check for failure
     if (sourceImage.empty()) {
         std::cout << "Could not open or find the image" << std::endl;
         return -1;
     }
 
-    processImageResults results = processImage(sourceImage);
+    cv::namedWindow("Source image", cv::WINDOW_NORMAL);
+    cv::imshow("Source image", sourceImage);
+    contrast(sourceImage, sourceImage, 1.7, -75);
+    // cv::namedWindow("Contrasted image", cv::WINDOW_NORMAL);
+    // cv::imshow("Contrasted image", sourceImage);
 
     // Create a window
-    cv::namedWindow("Display window", cv::WINDOW_NORMAL);
-    cv::createTrackbar("Threshold", "Display window", &threshold, 255, updateImage);
+    cv::namedWindow("Processed image", cv::WINDOW_NORMAL);
+    cv::createTrackbar("Threshold", "Processed image", &threshold, 255, updateImages);
     
     // Create a window for the transformed image
     cv::namedWindow("Transformed image", cv::WINDOW_NORMAL);
-    cv::imshow("Transformed image", transformImage(sourceImage, results.corners));
 
-    // Show our image inside the created window
-    cv::imshow("Display window", results.image);
+    updateImages(0, nullptr);
 
     // Wait for any keystroke in the window
     cv::waitKey(0);
