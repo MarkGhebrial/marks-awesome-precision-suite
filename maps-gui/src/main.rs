@@ -6,10 +6,12 @@ use eframe::egui::{self, Spacing};
 mod imagepanel;
 use imagepanel::*;
 
+mod util;
+
 fn main() {
     // env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_app_id("MAPS"),//.with_inner_size([320.0, 240.0]),
+        viewport: egui::ViewportBuilder::default().with_app_id("MAPS"), //.with_inner_size([320.0, 240.0]),
         ..Default::default()
     };
 
@@ -22,7 +24,8 @@ fn main() {
 
             Ok(Box::<MyApp>::default())
         }),
-    ).unwrap();
+    )
+    .unwrap();
 
     println!("Hi, this code only runs after the GUI terminates. That makes sense.");
 }
@@ -49,16 +52,16 @@ impl Default for MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // ctx.tex_manager();
 
         egui::SidePanel::left("image viewer panel")
-                .resizable(true)
-                .show_animated(ctx, self.is_left_panel_expanded, |ui| {
-                    self.image_viewer_panel.draw_ui(ui);
-                });
+            .resizable(true)
+            .show_animated(ctx, self.is_left_panel_expanded, |ui| {
+                self.image_viewer_panel
+                    .draw_ui(ui, ctx.tex_manager().clone());
+            });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-
-            
             ui.horizontal(|ui| {
                 ui.vertical(|ui| {
                     ui.heading("My egui Application");

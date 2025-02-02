@@ -1974,6 +1974,7 @@ dependencies = [
  "egui_extras",
  "image",
  "maps-core",
+ "opencv",
 ]
 
 [[package]]

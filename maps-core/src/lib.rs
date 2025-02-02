@@ -5,12 +5,29 @@ use opencv::core::Size;
 use opencv::core::Vector;
 use opencv::core::{Point, Point2f};
 use opencv::imgproc;
+use opencv::imgcodecs;
 
 const THRESHOLD: f64 = 159.0;
 
 // `Vector`` is the C++ vector type. It is different from Rust's `Vec` type
 type Contour = Vector<Point>;
 // type Contour2f = Vector<Point2f>;
+
+pub fn test_function() -> Mat {
+    let mut image: Mat = imgcodecs::imread_def(
+        "/home/markg/Documents/Code/Marks-Awesome-Precision-Suite/images/testtarget15.jpg",
+    )
+    .expect("Could not find image.");
+
+    let contour = find_target_corners(&image);
+
+    // opencv::imgproc::draw_contours_def(&mut image, &contour, -1, Scalar::from([0.0, 255.0, 0.0, 0.0])).unwrap();
+    for i in 0..contour.len() {
+        imgproc::line(&mut image, contour.get(i).unwrap(), contour.get((i+1) % contour.len()).unwrap(), [0.0, 255.0, 0.0, 0.0].into(), 5, imgproc::LINE_8, 0).unwrap();
+    }
+
+    image
+}
 
 pub fn find_target_corners(image: &Mat) -> Vector<Point> {
     let mut img_copy = image.clone();
@@ -57,13 +74,13 @@ pub fn find_target_corners(image: &Mat) -> Vector<Point> {
     )
     .unwrap();
 
-    // Convert back to rgb
-    imgproc::cvt_color_def(
-        image,
-        &mut img_copy,
-        imgproc::ColorConversionCodes::COLOR_GRAY2BGR.into(),
-    )
-    .unwrap();
+    // // Convert back to rgb
+    // imgproc::cvt_color_def(
+    //     image,
+    //     &mut img_copy,
+    //     imgproc::ColorConversionCodes::COLOR_GRAY2BGR.into(),
+    // )
+    // .unwrap();
 
     // Step three: find the four-sided contour with the largest area
     let mut biggest_contour: Contour = Vector::new();
