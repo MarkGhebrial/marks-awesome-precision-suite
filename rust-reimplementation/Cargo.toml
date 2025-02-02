@@ -1,0 +1,7 @@
+[package]
+name = "rust-reimplementation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+opencv = "0.94.2"

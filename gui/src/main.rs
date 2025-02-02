@@ -9,7 +9,7 @@ use imagepanel::*;
 fn main() {
     // env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default(),//.with_inner_size([320.0, 240.0]),
+        viewport: egui::ViewportBuilder::default().with_app_id("MAPS"),//.with_inner_size([320.0, 240.0]),
         ..Default::default()
     };
 
@@ -52,7 +52,7 @@ impl eframe::App for MyApp {
 
         egui::SidePanel::left("image viewer panel")
                 .resizable(true)
-                .show_animated(ctx, self.is_left_panel_expanded ,|ui| {
+                .show_animated(ctx, self.is_left_panel_expanded, |ui| {
                     self.image_viewer_panel.draw_ui(ui);
                 });
 
