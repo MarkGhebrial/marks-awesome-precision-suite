@@ -1,5 +1,5 @@
 [package]
-name = "gui"
+name = "maps-gui"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,4 +7,5 @@ edition = "2021"
 eframe = "0.30.0"
 egui_extras = { version = "0.30.0", features = ["image"] }
 image = { version = "0.25.5", features = ["jpeg", "png"] }
+maps-core = { path = "../maps-core" }
 
