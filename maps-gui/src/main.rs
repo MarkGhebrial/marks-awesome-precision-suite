@@ -6,7 +6,7 @@ use eframe::egui::{self, Spacing};
 mod imagepanel;
 use imagepanel::*;
 
-mod util;
+mod egui_mat_image;
 
 fn main() {
     // env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -16,11 +16,11 @@ fn main() {
     };
 
     eframe::run_native(
-        "My egui App",
+        "MAPS",
         options,
-        Box::new(|cc| {
+        Box::new(|_cc| {
             // This gives us image support:
-            egui_extras::install_image_loaders(&cc.egui_ctx);
+            // egui_extras::install_image_loaders(&cc.egui_ctx);
 
             Ok(Box::<MyApp>::default())
         }),
@@ -57,8 +57,7 @@ impl eframe::App for MyApp {
         egui::SidePanel::left("image viewer panel")
             .resizable(true)
             .show_animated(ctx, self.is_left_panel_expanded, |ui| {
-                self.image_viewer_panel
-                    .draw_ui(ui, ctx.tex_manager().clone());
+                self.image_viewer_panel.draw_ui(ui);
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
