@@ -1,12 +1,24 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
+use std::sync::mpsc::{self, Receiver, Sender};
+use std::thread;
+
+use cv::core::Mat;
+use opencv as cv;
+
 use eframe::egui::{self, Spacing};
 
 mod imagepanel;
 use imagepanel::*;
+mod settingspanel;
+use settingspanel::*;
 
 mod egui_mat_image;
+
+struct PipelineParams {
+    foo: bool,
+}
 
 fn main() {
     // env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -14,6 +26,21 @@ fn main() {
         viewport: egui::ViewportBuilder::default().with_app_id("MAPS"), //.with_inner_size([320.0, 240.0]),
         ..Default::default()
     };
+
+    let (tx_1, rx_1): (Sender<Mat>, Receiver<Mat>) = mpsc::channel();
+
+    let (tx_2, rx_2): (Sender<PipelineParams>, Receiver<PipelineParams>) = mpsc::channel();
+
+    // Spawn the thread that'll handle the image processing nonsense
+    thread::spawn(move || {
+        loop {
+            let params = rx_2.recv().unwrap();
+
+            // Do the computations
+
+            tx_1.send(maps_core::test_function()).unwrap();
+        }
+    });
 
     eframe::run_native(
         "MAPS",
@@ -31,71 +58,36 @@ fn main() {
 }
 
 struct MyApp {
-    name: String,
-    age: u32,
-    spacing: f32,
-    is_left_panel_expanded: bool,
     image_viewer_panel: ImageViewerPanel,
+    settings_panel: SettingsPanel,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            name: "Arthur".to_owned(),
-            age: 42,
-            spacing: Spacing::default().item_spacing.y,
-            is_left_panel_expanded: true,
             image_viewer_panel: ImageViewerPanel::new(),
+            settings_panel: SettingsPanel::new(),
         }
     }
 }
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // ctx.tex_manager();
 
-        egui::SidePanel::left("image viewer panel")
-            .resizable(true)
-            .show_animated(ctx, self.is_left_panel_expanded, |ui| {
-                self.image_viewer_panel.draw_ui(ui);
-            });
+        // Draw bottom panel
+        egui::TopBottomPanel::bottom("bottom panel").resizable(true).show(ctx, |ui| {
+            ui.heading("Bottom panel")
+        });
 
+        // Draw right panel
+        egui::SidePanel::right("right panel").resizable(false).show(ctx, |ui| {
+            self.settings_panel.draw_ui(ui);
+        });
+
+        // Draw image viewer panel
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.vertical(|ui| {
-                    ui.heading("My egui Application");
-                    ui.horizontal(|ui| {
-                        let name_label = ui.label("Your name: ");
-                        ui.text_edit_singleline(&mut self.name)
-                            .labelled_by(name_label.id);
-                    });
-                    ui.add(egui::Slider::new(&mut self.age, 0..=120).text("age"));
-                    if ui.button("Increment").clicked() {
-                        self.age += 1;
-                    }
-                    ui.label(format!("Hello '{}', age {}", self.name, self.age));
-                });
-
-                ui.vertical(|ui| {
-                    ui.spacing_mut().item_spacing.y = self.spacing;
-
-                    ui.heading("Group heading");
-
-                    ui.label("I have no idea what to put here");
-
-                    if ui.button("Button that does nothing :)").clicked() {
-                        println!("Wow, button was clicked");
-
-                        self.is_left_panel_expanded = !self.is_left_panel_expanded;
-
-                        if self.spacing == Spacing::default().item_spacing.y {
-                            self.spacing = 100.0;
-                        } else {
-                            self.spacing = Spacing::default().item_spacing.y;
-                        }
-                    };
-                });
-            });
+            // self.settings_panel.draw_ui(ui);
+            self.image_viewer_panel.draw_ui(ui);
         });
     }
 }

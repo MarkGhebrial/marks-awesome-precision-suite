@@ -4,8 +4,23 @@ use opencv::core::Mat;
 use opencv::core::Size;
 use opencv::core::Vector;
 use opencv::core::{Point, Point2f};
-use opencv::imgproc;
 use opencv::imgcodecs;
+use opencv::imgproc;
+
+// mod cv_pipeline;
+pub mod pipeline;
+
+// Pipeline stages:
+//  1. Threshold the image
+//      - Params:
+//         - thresholding mode:
+//           1: automatic (adaptive threshold)
+//           2: Otsu (automatic binary threshold)
+//           3: Manual (binary threshold with manually set value)
+//  2. Find the corners of the target and transform the image
+//  3. Threshold the transformed image and find the locations of all the marks
+//      - Params: thresholding mode and
+//  4. Draw
 
 const THRESHOLD: f64 = 159.0;
 
@@ -23,7 +38,16 @@ pub fn test_function() -> Mat {
 
     // opencv::imgproc::draw_contours_def(&mut image, &contour, -1, Scalar::from([0.0, 255.0, 0.0, 0.0])).unwrap();
     for i in 0..contour.len() {
-        imgproc::line(&mut image, contour.get(i).unwrap(), contour.get((i+1) % contour.len()).unwrap(), [0.0, 255.0, 0.0, 0.0].into(), 5, imgproc::LINE_8, 0).unwrap();
+        imgproc::line(
+            &mut image,
+            contour.get(i).unwrap(),
+            contour.get((i + 1) % contour.len()).unwrap(),
+            [0.0, 255.0, 0.0, 0.0].into(),
+            5,
+            imgproc::LINE_8,
+            0,
+        )
+        .unwrap();
     }
 
     image
