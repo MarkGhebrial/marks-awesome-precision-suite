@@ -9,10 +9,10 @@ use opencv as cv;
 
 use eframe::egui::{self, Spacing};
 
-mod imagepanel;
-use imagepanel::*;
-mod settingspanel;
-use settingspanel::*;
+mod image_panel;
+use image_panel::*;
+mod settings_panel;
+use settings_panel::*;
 
 mod egui_mat_image;
 
