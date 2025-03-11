@@ -16,9 +16,7 @@ use settings_panel::*;
 
 mod egui_mat_image;
 
-struct PipelineParams {
-    foo: bool,
-}
+use maps_core::pipeline::MAPSPipelineParams;
 
 fn main() {
     // env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -29,16 +27,23 @@ fn main() {
 
     let (tx_1, rx_1): (Sender<Mat>, Receiver<Mat>) = mpsc::channel();
 
-    let (tx_2, rx_2): (Sender<PipelineParams>, Receiver<PipelineParams>) = mpsc::channel();
+    let (tx_2, rx_2): (Sender<MAPSPipelineParams>, Receiver<MAPSPipelineParams>) = mpsc::channel();
 
     // Spawn the thread that'll handle the image processing nonsense
     thread::spawn(move || {
         loop {
             let params = rx_2.recv().unwrap();
 
+            let img: Mat = if params.target_dimensions.0 < 5.0 {
+                    let img = maps_core::load_image();
+                    maps_core::find_target_corners(&img).0
+                } else {
+                    maps_core::test_function()
+                };
+
             // Do the computations
 
-            tx_1.send(maps_core::test_function()).unwrap();
+            tx_1.send(img).unwrap();
         }
     });
 
@@ -46,10 +51,10 @@ fn main() {
         "MAPS",
         options,
         Box::new(|_cc| {
-            // This gives us image support:
+            // This gives us egui's image loading support:
             // egui_extras::install_image_loaders(&cc.egui_ctx);
 
-            Ok(Box::<MyApp>::default())
+            Ok(Box::new(MyApp::new(rx_1, tx_2)))
         }),
     )
     .unwrap();
@@ -62,11 +67,11 @@ struct MyApp {
     settings_panel: SettingsPanel,
 }
 
-impl Default for MyApp {
-    fn default() -> Self {
+impl MyApp {
+    fn new(recv: Receiver<Mat>, send: Sender<MAPSPipelineParams>) -> Self {
         Self {
-            image_viewer_panel: ImageViewerPanel::new(),
-            settings_panel: SettingsPanel::new(),
+            image_viewer_panel: ImageViewerPanel::new(recv),
+            settings_panel: SettingsPanel::new(send),
         }
     }
 }

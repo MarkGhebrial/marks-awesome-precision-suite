@@ -1,22 +1,32 @@
+use std::sync::mpsc::{self, Receiver, Sender};
+
 use eframe::egui;
 
 use egui::Image;
 use egui::Ui;
 
+use opencv as cv;
+use cv::core::Mat;
+
 use crate::egui_mat_image::MatImage;
 
 pub struct ImageViewerPanel {
+    recv: Receiver<Mat>,
     image: MatImage,
 }
 
 impl ImageViewerPanel {
-    pub fn new() -> Self {
+    pub fn new(recv: Receiver<Mat>) -> Self {
         let image = MatImage::new_from_mat(maps_core::test_function());
 
-        Self { image }
+        Self { recv, image }
     }
 
     pub fn draw_ui(&mut self, ui: &mut Ui) {
+        if let Ok(mat) = self.recv.try_recv() {
+            self.image.set_mat(mat).expect("Error updating image");
+        }
+
         ui.label("Wow so cool (an official message from the image viewer panel)");
 
         match self.image.get_image_source(ui.ctx().tex_manager()) {

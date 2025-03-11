@@ -1,3 +1,5 @@
+use std::sync::mpsc::{self, Receiver, Sender};
+
 use eframe::egui;
 
 use eframe::egui::Slider;
@@ -8,18 +10,20 @@ use egui::Ui;
 use maps_core::pipeline::MAPSPipelineParams;
 
 pub struct SettingsPanel {
+    send: Sender<MAPSPipelineParams>,
     params: MAPSPipelineParams,
 }
 
 impl SettingsPanel {
-    pub fn new() -> Self {
+    pub fn new(send: Sender<MAPSPipelineParams>) -> Self {
         Self {
+            send,
             params: MAPSPipelineParams::default(),
         }
     }
 
     pub fn draw_ui(&mut self, ui: &mut Ui) {
-
+        let prev_params = self.params;
 
         let inner_response = Frame::none().show(ui, |ui| {
             Grid::new("settings panel grid").show(ui, |ui| {
@@ -45,7 +49,11 @@ impl SettingsPanel {
             ui.label("FRAME IS BEING HOVERED");
         }
 
-
+        // Check if the user has changed the parameters
+        if prev_params != self.params {
+            // If the parameters have changed, send them to the pipeline thread
+            self.send.send(self.params.clone()).unwrap();
+        }
 
         println!("Target size: {:?}", self.params.target_dimensions);
     }

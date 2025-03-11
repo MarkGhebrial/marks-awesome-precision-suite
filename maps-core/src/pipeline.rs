@@ -3,6 +3,7 @@ use cv::imgproc::adaptive_threshold;
 use opencv as cv;
 use opencv::core::MatTraitConst;
 
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ThresholdMode {
     /// Adaptive thresholding.
     AUTOMATIC { c: f64 },
@@ -14,6 +15,7 @@ pub enum ThresholdMode {
     MANUAL { thresh: f64 },
 }
 
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct MAPSPipelineParams {
     /// Dimension of the target
     pub target_dimensions: (f64, f64),
