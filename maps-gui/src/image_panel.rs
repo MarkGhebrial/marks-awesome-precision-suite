@@ -5,8 +5,8 @@ use eframe::egui;
 use egui::Image;
 use egui::Ui;
 
-use opencv as cv;
 use cv::core::Mat;
+use opencv as cv;
 
 use crate::egui_mat_image::MatImage;
 

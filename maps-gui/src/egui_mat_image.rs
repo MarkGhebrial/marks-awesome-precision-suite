@@ -58,24 +58,44 @@ impl MatImage {
     ) -> Option<ImageSource> {
         if let Some(mat) = &self.mat {
             if !self.texture_id_up_to_date || self.texture_id.is_none() {
-                let color_image = ColorImage::from_rgb(
-                    [
-                        mat.size().unwrap().width as usize,
-                        mat.size().unwrap().height as usize,
-                    ],
-                    mat.data_bytes().unwrap(),
-                );
+                // The number of channels in a mat tells us if its rgb or greyscale
+                let color_image: ColorImage = match mat.channels() {
+                    1 => ColorImage::from_gray(
+                        [
+                            mat.size().unwrap().width as usize,
+                            mat.size().unwrap().height as usize,
+                        ],
+                        mat.data_bytes().unwrap(),
+                    ),
+                    3 => ColorImage::from_rgb(
+                        [
+                            mat.size().unwrap().width as usize,
+                            mat.size().unwrap().height as usize,
+                        ],
+                        mat.data_bytes().unwrap(),
+                    ),
+                    _ => panic!(
+                        "Mat image loader does not support images with {} channels",
+                        mat.channels()
+                    ),
+                };
 
                 let image_data = ImageData::Color(Arc::new(color_image));
 
                 let mut texture_manager = texture_manager.write();
 
+                // Free the old texture
                 if let Some(texture_id) = self.texture_id {
                     texture_manager.free(texture_id);
                 }
 
-                self.texture_id =
-                    Some(texture_manager.alloc("name".into(), image_data, TextureOptions::LINEAR));
+                // Allocate the new texture
+                self.texture_id = Some(texture_manager.alloc(
+                    "name".into(),
+                    image_data,
+                    TextureOptions::LINEAR,
+                ));
+                
                 self.texture_id_up_to_date = true;
             }
 
@@ -88,6 +108,7 @@ impl MatImage {
             )));
         }
 
+        // Return None if we don't have a Mat
         None
     }
 }

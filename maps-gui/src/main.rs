@@ -35,11 +35,11 @@ fn main() {
             let params = rx_2.recv().unwrap();
 
             let img: Mat = if params.target_dimensions.0 < 5.0 {
-                    let img = maps_core::load_image();
-                    maps_core::find_target_corners(&img).0
-                } else {
-                    maps_core::test_function()
-                };
+                let img = maps_core::load_image();
+                maps_core::find_target_corners(&img).0
+            } else {
+                maps_core::test_function()
+            };
 
             // Do the computations
 
@@ -78,16 +78,17 @@ impl MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-
         // Draw bottom panel
-        egui::TopBottomPanel::bottom("bottom panel").resizable(true).show(ctx, |ui| {
-            ui.heading("Bottom panel")
-        });
+        egui::TopBottomPanel::bottom("bottom panel")
+            .resizable(true)
+            .show(ctx, |ui| ui.heading("Bottom panel"));
 
         // Draw right panel
-        egui::SidePanel::right("right panel").resizable(false).show(ctx, |ui| {
-            self.settings_panel.draw_ui(ui);
-        });
+        egui::SidePanel::right("right panel")
+            .resizable(false)
+            .show(ctx, |ui| {
+                self.settings_panel.draw_ui(ui);
+            });
 
         // Draw image viewer panel
         egui::CentralPanel::default().show(ctx, |ui| {

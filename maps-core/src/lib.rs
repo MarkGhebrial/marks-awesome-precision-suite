@@ -108,7 +108,7 @@ pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
     imgproc::cvt_color_def(
         image,
         &mut img_copy,
-        imgproc::ColorConversionCodes::COLOR_GRAY2BGR.into(),
+        imgproc::ColorConversionCodes::COLOR_BGR2GRAY.into(), // TODO: this is suppoesed to be be COLOR_GRAY2BGR?
     )
     .unwrap();
 
