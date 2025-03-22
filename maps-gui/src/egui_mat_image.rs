@@ -18,7 +18,6 @@ use egui::TextureOptions;
 pub struct MatImage {
     mat: Option<Mat>,
     texture_id: Option<TextureId>,
-    texture_id_up_to_date: bool,
 }
 
 impl MatImage {
@@ -26,89 +25,77 @@ impl MatImage {
         Self {
             mat: None,
             texture_id: None,
-            texture_id_up_to_date: false,
         }
     }
 
-    pub fn new_from_mat(mat: Mat) -> Self {
-        Self {
-            mat: Some(mat),
-            texture_id: None,
-            texture_id_up_to_date: false,
-        }
-    }
+    // pub fn new_from_mat(mat: Mat) -> Self {
+    //     let mut out = Self::new();
 
-    pub fn set_mat(&mut self, new_mat: Mat) -> Result<(), Box<dyn Error>> {
+    //     out.set_mat(mat);
+
+    //     out
+    // }
+
+    pub fn set_mat(&mut self, mat: Mat, ctx: &egui::Context) -> Result<(), Box<dyn Error>> {
+        // Make sure the new mat is not the same as the current mat
         if let Some(current_mat) = &self.mat {
-            if new_mat.data_bytes()? == current_mat.data_bytes()? {
-                // The new mat is the same as the old mat. No need to take action
+            if mat.data_bytes()? == current_mat.data_bytes()? {
                 return Ok(());
-            } else {
-                self.mat = Some(new_mat);
-                self.texture_id_up_to_date = false
             }
         }
+
+        let color_image = match mat.channels() {
+            1 => ColorImage::from_gray(
+                // The from_gray and from_rgb methods copy all the image bytres in the mat
+                [
+                    mat.size().unwrap().width as usize,
+                    mat.size().unwrap().height as usize,
+                ],
+                mat.data_bytes().unwrap(),
+            ),
+            3 => ColorImage::from_rgb(
+                [
+                    mat.size().unwrap().width as usize,
+                    mat.size().unwrap().height as usize,
+                ],
+                mat.data_bytes().unwrap(),
+            ),
+            _ => panic!(
+                "MatImage loader does not support images with {} channels",
+                mat.channels()
+            ),
+        };
+
+        let image_data = ImageData::Color(Arc::new(color_image));
+
+        let texture_manager_handle = ctx.tex_manager();
+        let mut texture_manager = texture_manager_handle.write();
+
+        // Free the old texture
+        if let Some(texture_id) = self.texture_id {
+            texture_manager.free(texture_id);
+        }
+
+        // Allocate the new texture
+        self.texture_id =
+            Some(texture_manager.alloc("name".into(), image_data, TextureOptions::LINEAR));
+
+        self.mat = Some(mat);
 
         Ok(())
     }
 
-    pub fn get_image_source(
-        &mut self,
-        texture_manager: Arc<RwLock<TextureManager>>,
-    ) -> Option<ImageSource> {
-        if let Some(mat) = &self.mat {
-            if !self.texture_id_up_to_date || self.texture_id.is_none() {
-                // The number of channels in a mat tells us if its rgb or greyscale
-                let color_image: ColorImage = match mat.channels() {
-                    1 => ColorImage::from_gray(
-                        [
-                            mat.size().unwrap().width as usize,
-                            mat.size().unwrap().height as usize,
-                        ],
-                        mat.data_bytes().unwrap(),
-                    ),
-                    3 => ColorImage::from_rgb(
-                        [
-                            mat.size().unwrap().width as usize,
-                            mat.size().unwrap().height as usize,
-                        ],
-                        mat.data_bytes().unwrap(),
-                    ),
-                    _ => panic!(
-                        "Mat image loader does not support images with {} channels",
-                        mat.channels()
-                    ),
-                };
-
-                let image_data = ImageData::Color(Arc::new(color_image));
-
-                let mut texture_manager = texture_manager.write();
-
-                // Free the old texture
-                if let Some(texture_id) = self.texture_id {
-                    texture_manager.free(texture_id);
-                }
-
-                // Allocate the new texture
-                self.texture_id = Some(texture_manager.alloc(
-                    "name".into(),
-                    image_data,
-                    TextureOptions::LINEAR,
-                ));
-                
-                self.texture_id_up_to_date = true;
-            }
-
-            return Some(ImageSource::Texture(SizedTexture::new(
-                self.texture_id.unwrap(),
-                Vec2::from([
+    pub fn get_texture(&self) -> Option<SizedTexture> {
+        if let (Some(mat), Some(texture_id)) = (&self.mat, self.texture_id) {
+            Some(SizedTexture {
+                id: texture_id,
+                size: Vec2::from([
                     mat.size().unwrap().width as f32 / 10.0,
                     mat.size().unwrap().height as f32 / 10.0,
                 ]),
-            )));
+            })
+        } else {
+            None
         }
-
-        // Return None if we don't have a Mat
-        None
     }
 }

@@ -2,6 +2,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 
 use eframe::egui;
 
+use eframe::egui::ImageSource;
 use egui::Image;
 use egui::Ui;
 
@@ -17,21 +18,21 @@ pub struct ImageViewerPanel {
 
 impl ImageViewerPanel {
     pub fn new(recv: Receiver<Mat>) -> Self {
-        let image = MatImage::new_from_mat(maps_core::test_function());
+        let image = MatImage::new();
 
         Self { recv, image }
     }
 
     pub fn draw_ui(&mut self, ui: &mut Ui) {
         if let Ok(mat) = self.recv.try_recv() {
-            self.image.set_mat(mat).expect("Error updating image");
+            self.image.set_mat(mat, &ui.ctx()).expect("Error updating image");
         }
 
         ui.label("Wow so cool (an official message from the image viewer panel)");
 
-        match self.image.get_image_source(ui.ctx().tex_manager()) {
-            Some(image_source) => {
-                ui.add(Image::new(image_source).shrink_to_fit());
+        match self.image.get_texture() {
+            Some(texture) => {
+                ui.add(Image::new(ImageSource::Texture(texture)).shrink_to_fit());
             }
             None => {
                 ui.label("No image loaded");
