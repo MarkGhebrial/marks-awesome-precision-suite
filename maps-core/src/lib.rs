@@ -92,8 +92,6 @@ pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
     )
     .unwrap();
 
-
-
     // Step two: find the contours
     let mut contours: Vector<Contour> = Vector::new();
     imgproc::find_contours_def(

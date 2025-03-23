@@ -7,7 +7,7 @@ use std::thread;
 use cv::core::Mat;
 use opencv as cv;
 
-use eframe::egui::{self, Spacing};
+use eframe::egui;
 
 mod image_panel;
 use image_panel::*;
@@ -15,6 +15,7 @@ mod settings_panel;
 use settings_panel::*;
 
 mod egui_mat_image;
+// mod mat_loader;
 
 use maps_core::pipeline::MAPSPipelineParams;
 

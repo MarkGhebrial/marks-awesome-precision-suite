@@ -6,9 +6,7 @@ use cv::core::MatTraitConst;
 use cv::core::MatTraitConstManual;
 use opencv as cv;
 
-use eframe::egui::{self, load::SizedTexture, ImageSource, TextureId, Vec2};
-use egui::epaint::TextureManager;
-use egui::mutex::RwLock;
+use eframe::egui::{self, load::SizedTexture, TextureId, Vec2};
 use egui::ColorImage;
 use egui::ImageData;
 use egui::TextureOptions;
