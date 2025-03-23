@@ -45,7 +45,7 @@ impl SettingsPanel {
             });
         });
 
-        if inner_response.response.hovered() {
+        if inner_response.response.contains_pointer() {
             ui.label("FRAME IS BEING HOVERED");
         }
 
