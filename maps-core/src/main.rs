@@ -1,11 +1,11 @@
 use maps_core::find_target_corners;
-use opencv::core::{Scalar, VecN};
+// use opencv::core::{Scalar, VecN};
 use opencv::highgui;
-use opencv::highgui::{named_window_def, WINDOW_NORMAL};
+use opencv::highgui::{/*named_window_def,*/ WINDOW_NORMAL};
 use opencv::imgcodecs;
 use opencv::imgproc;
 use opencv::prelude::*;
-use opencv::viz::imshow_def;
+// use opencv::viz::imshow_def;
 
 fn main() {
     let mut image: Mat = imgcodecs::imread_def(
@@ -13,7 +13,7 @@ fn main() {
     )
     .expect("Could not find image.");
 
-    let contour = find_target_corners(&image);
+    let contour = find_target_corners(&image).1;
 
     // opencv::imgproc::draw_contours_def(&mut image, &contour, -1, Scalar::from([0.0, 255.0, 0.0, 0.0])).unwrap();
     for i in 0..contour.len() {

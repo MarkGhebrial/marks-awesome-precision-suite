@@ -3,16 +3,12 @@ use cv::prelude::*;
 
 use super::PipelineStage;
 
-type Pipeline = Vec<Box<dyn PipelineStage>>;
+pub type Pipeline = Vec<Box<dyn PipelineStage>>;
 
 impl PipelineStage for Pipeline {
-    fn compute(&self, image: Mat) -> Mat {
-        let mut out = image.clone();
-
+    fn compute(&self, image: &mut Mat) {
         for stage in self {
-            out = stage.compute(out);
+            stage.compute(image);
         }
-
-        out
     }
 }

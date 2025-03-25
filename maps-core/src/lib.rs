@@ -6,9 +6,14 @@ use opencv::core::Vector;
 use opencv::core::{Point, Point2f};
 use opencv::imgcodecs;
 use opencv::imgproc;
+use pipeline::stages::*;
+use pipeline::Pipeline;
+use pipeline::PipelineStage;
 
 // mod cv_pipeline;
 pub mod pipeline;
+
+pub mod parameters;
 
 // Pipeline stages:
 //  1. Threshold the image
@@ -59,6 +64,15 @@ pub fn test_function() -> Mat {
 
 pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
     let mut img_copy = image.clone();
+
+    let pipeline: Pipeline = vec![
+        Box::new(GaussianBlurStage::default()),
+
+    ];
+
+    let img = pipeline.compute_on_a_copy(image);
+
+    // GaussianBlurStage::default().compute();
 
     // Step one: threshold the image
     // TODO?: Downscale the image?

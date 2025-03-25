@@ -7,7 +7,7 @@ use egui::Frame;
 use egui::Grid;
 use egui::Ui;
 
-use maps_core::pipeline::MAPSPipelineParams;
+use maps_core::parameters::MAPSPipelineParams;
 
 pub struct SettingsPanel {
     send: Sender<MAPSPipelineParams>,

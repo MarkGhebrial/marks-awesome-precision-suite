@@ -1,17 +1,15 @@
+use opencv::core::MatTrait;
+use opencv::traits::Boxed;
 use opencv as cv;
 use cv::core::Mat;
-use cv::core::MatTraitConst;
 use cv::core::Size;
-use cv::core::VecN;
 use cv::imgproc;
 
-pub trait PipelineStage {
-    fn compute(&self, image: Mat) -> Mat;
-}
+use super::super::PipelineStage;
 
 pub struct GaussianBlurStage {
-    size: Size,
-    sigma_x: f64,
+    pub size: Size,
+    pub sigma_x: f64,
 }
 
 impl Default for GaussianBlurStage {
@@ -24,18 +22,19 @@ impl Default for GaussianBlurStage {
 }
 
 impl PipelineStage for GaussianBlurStage {
-    fn compute(&self, image: Mat) -> Mat {
-        let mut out = Mat::new_size_with_default(
-            image.size().unwrap(),
-            image.typ(),
-            VecN::new(0.0, 0.0, 0.0, 0.0),
-        )
-        .unwrap();
+    fn compute(&self, image: &mut Mat) {
+        // Create a second reference to the Mat without actually copying its data.
+        let i = unsafe {
+            // Increment the Mat's reference counter to avoid a double free
+            image.addref().expect("unable to increment reference count for Mat");
+
+            Mat::from_raw(image.as_raw_mut())
+        };
 
         // Blur the image
         imgproc::gaussian_blur_def(
-            &image,
-            &mut out,
+            &i,
+            image,
             self.size,
             self.sigma_x,
             // 0.0,
@@ -43,7 +42,5 @@ impl PipelineStage for GaussianBlurStage {
             // AlgorithmHint::ALGO_HINT_DEFAULT,
         )
         .unwrap();
-
-        out
     }
 }

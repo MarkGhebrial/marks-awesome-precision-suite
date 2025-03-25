@@ -17,7 +17,7 @@ use settings_panel::*;
 mod egui_mat_image;
 // mod mat_loader;
 
-use maps_core::pipeline::MAPSPipelineParams;
+use maps_core::parameters::MAPSPipelineParams;
 
 fn main() {
     // env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
