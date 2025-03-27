@@ -1,28 +1,34 @@
 use opencv::core::MatTrait;
+use opencv::imgproc::ColorConversionCodes;
 use opencv::traits::Boxed;
 use opencv as cv;
 use cv::core::Mat;
-use cv::core::Size;
 use cv::imgproc;
 
 use super::super::PipelineStage;
 
-pub struct GaussianBlurStage {
-    pub size: Size,
-    pub sigma_x: f64,
+pub struct ConvertColorStage {
+    pub conversion_code: ColorConversionCodes,
 }
 
-impl Default for GaussianBlurStage {
-    fn default() -> Self {
+impl ConvertColorStage {
+    pub fn rgba_to_greyscale() -> Self {
         Self {
-            size: Size::new(15, 15),
-            sigma_x: 0.0,
+            conversion_code: ColorConversionCodes::COLOR_BGR2GRAY,
+        }
+    }
+
+    pub fn greyscale_to_rgba() -> Self {
+        Self {
+            conversion_code: ColorConversionCodes::COLOR_GRAY2BGR,
         }
     }
 }
 
-impl PipelineStage for GaussianBlurStage {
+impl PipelineStage for ConvertColorStage {
     fn compute(&self, image: &mut Mat) {
+
+        // TODO: USE THE `modify_inplace` HELPER FUNCTION INSTEAD
         // Create a second reference to the Mat without actually copying its data.
         let i = unsafe {
             // Increment the Mat's reference counter to avoid a double free
@@ -32,14 +38,10 @@ impl PipelineStage for GaussianBlurStage {
         };
 
         // Blur the image
-        imgproc::gaussian_blur_def(
+        imgproc::cvt_color_def(
             &i,
             image,
-            self.size,
-            self.sigma_x,
-            // 0.0,
-            // BorderTypes::BORDER_REFLECT.into(),
-            // AlgorithmHint::ALGO_HINT_DEFAULT,
+            self.conversion_code.into(),
         )
         .unwrap();
     }

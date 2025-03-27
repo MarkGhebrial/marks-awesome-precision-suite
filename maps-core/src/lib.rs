@@ -65,10 +65,8 @@ pub fn test_function() -> Mat {
 pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
     let mut img_copy = image.clone();
 
-    let pipeline: Pipeline = vec![
-        Box::new(GaussianBlurStage::default()),
-
-    ];
+    let mut pipeline: Pipeline = Pipeline::new();
+    pipeline.add_stage(GaussianBlurStage::default());
 
     let img = pipeline.compute_on_a_copy(image);
 
@@ -146,14 +144,4 @@ pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
     }
 
     (output_mat, biggest_contour)
-}
-
-#[cfg(test)]
-mod tests {
-    // use super::*;
-
-    #[test]
-    fn it_works() {
-        assert_eq!(4, 4);
-    }
 }
