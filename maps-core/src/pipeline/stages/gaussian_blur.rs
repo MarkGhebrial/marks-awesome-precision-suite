@@ -1,8 +1,8 @@
 use cv::core::Mat;
 use cv::core::Size;
 use cv::imgproc;
-use opencv::core::ModifyInplace;
 use opencv as cv;
+use opencv::core::ModifyInplace;
 
 use super::super::PipelineStage;
 

@@ -1,6 +1,5 @@
-use opencv::core::MatTrait;
+use opencv::core::ModifyInplace;
 use opencv::imgproc::ColorConversionCodes;
-use opencv::traits::Boxed;
 use opencv as cv;
 use cv::core::Mat;
 use cv::imgproc;
@@ -27,22 +26,22 @@ impl ConvertColorStage {
 
 impl PipelineStage for ConvertColorStage {
     fn compute(&self, image: &mut Mat) {
-
-        // TODO: USE THE `modify_inplace` HELPER FUNCTION INSTEAD
-        // Create a second reference to the Mat without actually copying its data.
-        let i = unsafe {
-            // Increment the Mat's reference counter to avoid a double free
-            image.addref().expect("unable to increment reference count for Mat");
-
-            Mat::from_raw(image.as_raw_mut())
-        };
-
-        // Blur the image
-        imgproc::cvt_color_def(
-            &i,
-            image,
-            self.conversion_code.into(),
-        )
-        .unwrap();
+        // We have to do this unsafe `modify_inplace` nonsense because in-place opencv
+        // operations require both an immutable reference and a mutable reference
+        // to the same Mat. Safe Rust does not allow that.
+        //
+        // See https://github.com/twistedfall/opencv-rust/issues/571
+        //
+        // TODO: Figure out what color conversions are not safe.
+        unsafe {
+            image.modify_inplace(|input, output| {
+                imgproc::cvt_color_def(
+                    input,
+                    output,
+                    self.conversion_code.into(),
+                )
+                .unwrap();
+            })
+        }
     }
 }

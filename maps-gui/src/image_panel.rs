@@ -1,16 +1,12 @@
-use std::borrow::Cow;
-use std::sync::mpsc::{self, Receiver, Sender};
-use std::sync::Arc;
+use std::sync::mpsc::Receiver;
 
 use eframe::egui;
 
 use eframe::egui::ImageSource;
 use egui::Image;
 use egui::Ui;
-use egui::load::Bytes;
 
 use cv::core::Mat;
-use opencv::core::MatTraitConstManual;
 use opencv as cv;
 
 use crate::egui_mat_image::MatImage;
@@ -29,7 +25,9 @@ impl ImageViewerPanel {
 
     pub fn draw_ui(&mut self, ui: &mut Ui) {
         if let Ok(mat) = self.recv.try_recv() {
-            self.image.set_mat(mat, &ui.ctx()).expect("Error updating image");
+            self.image
+                .set_mat(mat, &ui.ctx())
+                .expect("Error updating image");
         }
 
         ui.label("Wow so cool (an official message from the image viewer panel)");

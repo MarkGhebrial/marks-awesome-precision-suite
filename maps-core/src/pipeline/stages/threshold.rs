@@ -3,12 +3,11 @@ use cv::imgproc;
 use cv::imgproc::AdaptiveThresholdTypes;
 use cv::imgproc::ThresholdTypes;
 use opencv as cv;
-use opencv::core::MatTrait;
-use opencv::traits::Boxed;
+use opencv::core::ModifyInplace;
 
 use super::super::PipelineStage;
 
-/// Wrapper for `cv::imgproc::ThresholdTypes`
+/// Wrapper for `cv::imgproc::threshold`
 pub struct ThresholdStage {
     pub threshold: f64,
     pub threshold_type: ThresholdTypes,
@@ -35,25 +34,24 @@ impl Default for ThresholdStage {
 
 impl PipelineStage for ThresholdStage {
     fn compute(&self, image: &mut Mat) {
-        // TODO: USE THE `modify_inplace` HELPER FUNCTION INSTEAD
-        // Create a second reference to the Mat without actually copying its data.
-        let i = unsafe {
-            // Increment the Mat's reference counter to avoid a double free
-            image
-                .addref()
-                .expect("unable to increment reference count for Mat");
-
-            Mat::from_raw(image.as_raw_mut())
-        };
-
-        imgproc::threshold(
-            &i,
-            image,
-            self.threshold,
-            255.0, // TODO: do we need to make this parameter one of the struct members?
-            self.threshold_type.into(),
-        )
-        .unwrap();
+        // We have to do this unsafe `modify_inplace` nonsense because in-place opencv
+        // operations require both an immutable reference and a mutable reference
+        // to the same Mat. Safe Rust does not allow that.
+        //
+        // See https://github.com/twistedfall/opencv-rust/issues/571
+        unsafe {
+            image.modify_inplace(|input, output| {
+                // TODO: do we need to make the maxval parameter one of the struct members?
+                imgproc::threshold(
+                    input,
+                    output,
+                    self.threshold,
+                    255.0,
+                    self.threshold_type.into(),
+                )
+                .unwrap();
+            });
+        }
     }
 }
 
@@ -90,25 +88,24 @@ impl Default for AdaptiveThresholdStage {
 
 impl PipelineStage for AdaptiveThresholdStage {
     fn compute(&self, image: &mut Mat) {
-        // Create a second reference to the Mat without actually copying its data.
-        let i = unsafe {
-            // Increment the Mat's reference counter to avoid a double free
-            image
-                .addref()
-                .expect("unable to increment reference count for Mat");
-
-            Mat::from_raw(image.as_raw_mut())
-        };
-
-        imgproc::adaptive_threshold(
-            &i,
-            image,
-            255.0,
-            self.adaptive_method.into(),
-            self.threshold_type.into(),
-            self.block_size,
-            self.c,
-        )
-        .unwrap();
+        // We have to do this unsafe `modify_inplace` nonsense because in-place opencv
+        // operations require both an immutable reference and a mutable reference
+        // to the same Mat. Safe Rust does not allow that.
+        //
+        // See https://github.com/twistedfall/opencv-rust/issues/571
+        unsafe {
+            image.modify_inplace(|input, output| {
+                imgproc::adaptive_threshold(
+                    input,
+                    output,
+                    255.0,
+                    self.adaptive_method.into(),
+                    self.threshold_type.into(),
+                    self.block_size,
+                    self.c,
+                )
+                .unwrap();
+            })
+        }
     }
 }
