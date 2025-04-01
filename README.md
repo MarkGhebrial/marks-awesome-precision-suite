@@ -29,7 +29,7 @@ src/MAPS <path_to_image> # run the program
 
 Mark's Awesome Precision Suite
 
-Copyright (C) 2023-2024 Mark Ghebrial
+Copyright (C) 2024-2025 Mark Ghebrial
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
