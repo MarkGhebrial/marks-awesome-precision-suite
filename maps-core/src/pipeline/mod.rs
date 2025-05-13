@@ -8,6 +8,7 @@ mod pipeline;
 pub use pipeline::*;
 
 /// Represents a stage in a CV pipeline. Each stage takes an image as input and
+/// modifies that image in some way before the image is passed to the next stage.
 pub trait PipelineStage {
     /// Perform the computations on the provided image.
     fn compute(&self, image: &mut Mat);
