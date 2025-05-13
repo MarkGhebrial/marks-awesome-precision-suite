@@ -14,12 +14,17 @@ pub struct ThresholdStage {
 }
 
 impl ThresholdStage {
-    fn set_threshold(&mut self, thresh: f64) {
+    /// TODO: do we actually want to consume self here? I think that's how the
+    /// builder pattern usually works, but is the builder pattern the right
+    /// solution?
+    pub fn set_threshold(mut self, thresh: f64) -> Self {
         self.threshold = thresh;
+        self
     }
 
-    fn threshold_type(&mut self, thresh_type: ThresholdTypes) {
+    pub fn set_threshold_type(mut self, thresh_type: ThresholdTypes) -> Self {
         self.threshold_type = thresh_type;
+        self
     }
 }
 

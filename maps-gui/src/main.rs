@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
-use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::mpsc::{self, Receiver, RecvError, Sender};
 use std::thread;
 
 use cv::core::Mat;
@@ -15,7 +15,6 @@ mod settings_panel;
 use settings_panel::*;
 
 mod egui_mat_image;
-// mod mat_loader;
 
 use maps_core::parameters::MAPSPipelineParams;
 
@@ -33,19 +32,26 @@ fn main() {
     // Spawn the thread that'll handle the image processing nonsense
     thread::spawn(move || {
         loop {
-            let params = rx_2.recv().unwrap();
+            let params = match rx_2.recv() {
+                Ok(p) => p,
+                Err(RecvError) => break, // The channel has disconnected, so exit the loop and kill the thread
+            };
 
             let img: Mat = if params.target_dimensions.0 < 5.0 {
                 let img = maps_core::load_image();
-                maps_core::find_target_corners(&img).0
+                let (img, contour) = maps_core::find_target_corners(&img);
+
+                println!("Target corners: {:?}", contour);
+
+                img
             } else {
                 maps_core::test_function()
             };
 
-            // Do the computations
-
             tx_1.send(img).unwrap();
         }
+
+        println!("Image processor thread terminating");
     });
 
     eframe::run_native(
@@ -59,8 +65,6 @@ fn main() {
         }),
     )
     .unwrap();
-
-    println!("Hi, this code only runs after the GUI terminates. That makes sense.");
 }
 
 struct MyApp {

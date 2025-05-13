@@ -11,13 +11,13 @@ pub struct ConvertColorStage {
 }
 
 impl ConvertColorStage {
-    pub fn rgba_to_greyscale() -> Self {
+    pub fn rgba_to_grayscale() -> Self {
         Self {
             conversion_code: ColorConversionCodes::COLOR_BGR2GRAY,
         }
     }
 
-    pub fn greyscale_to_rgba() -> Self {
+    pub fn grayscale_to_rgba() -> Self {
         Self {
             conversion_code: ColorConversionCodes::COLOR_GRAY2BGR,
         }

@@ -1,11 +1,9 @@
-// use opencv::core::AlgorithmHint;
-// use opencv::core::BorderTypes;
-use opencv::core::Mat;
-use opencv::core::Size;
-use opencv::core::Vector;
-use opencv::core::{Point, Point2f};
-use opencv::imgcodecs;
-use opencv::imgproc;
+use opencv as cv;
+use cv::core::Mat;
+use cv::core::Vector;
+use cv::core::Point;
+use cv::imgcodecs;
+use cv::imgproc;
 use pipeline::stages::*;
 use pipeline::Pipeline;
 use pipeline::PipelineStage;
@@ -31,7 +29,6 @@ const THRESHOLD: f64 = 159.0;
 
 // `Vector`` is the C++ vector type. It is different from Rust's `Vec` type
 type Contour = Vector<Point>;
-// type Contour2f = Vector<Point2f>;
 
 pub fn load_image() -> Mat {
     imgcodecs::imread_def(
@@ -45,7 +42,7 @@ pub fn test_function() -> Mat {
 
     let (_, contour) = find_target_corners(&image);
 
-    // opencv::imgproc::draw_contours_def(&mut image, &contour, -1, Scalar::from([0.0, 255.0, 0.0, 0.0])).unwrap();
+    // cv::imgproc::draw_contours_def(&mut image, &contour, -1, Scalar::from([0.0, 255.0, 0.0, 0.0])).unwrap();
     for i in 0..contour.len() {
         imgproc::line(
             &mut image,
@@ -63,46 +60,12 @@ pub fn test_function() -> Mat {
 }
 
 pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
-    let mut img_copy = image.clone();
-
     let mut pipeline: Pipeline = Pipeline::new();
+    pipeline.add_stage(ConvertColorStage::rgba_to_grayscale());
     pipeline.add_stage(GaussianBlurStage::default());
+    pipeline.add_stage(ThresholdStage::default().set_threshold(THRESHOLD));
 
-    let img = pipeline.compute_on_a_copy(image);
-
-    // GaussianBlurStage::default().compute();
-
-    // Step one: threshold the image
-    // TODO?: Downscale the image?
-    // Convert to grayscale (cv::cvtColor())
-    imgproc::cvt_color_def(
-        image,
-        &mut img_copy,
-        imgproc::ColorConversionCodes::COLOR_BGR2GRAY.into(),
-    )
-    .unwrap();
-
-    // Blur the image
-    imgproc::gaussian_blur_def(
-        &img_copy.clone(),
-        &mut img_copy,
-        Size::new(15, 15),
-        0.0,
-        // 0.0,
-        // BorderTypes::BORDER_REFLECT.into(),
-        // AlgorithmHint::ALGO_HINT_DEFAULT,
-    )
-    .unwrap();
-
-    // Threshold (cv::threshold())
-    imgproc::threshold(
-        &img_copy.clone(),
-        &mut img_copy,
-        THRESHOLD,
-        255.0,
-        imgproc::ThresholdTypes::THRESH_BINARY.into(),
-    )
-    .unwrap();
+    let mut img_copy = pipeline.compute_on_a_copy(image);
 
     // Step two: find the contours
     let mut contours: Vector<Contour> = Vector::new();
@@ -114,21 +77,14 @@ pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
     )
     .unwrap();
 
-    // Convert back to rgb
-    imgproc::cvt_color_def(
-        image,
-        &mut img_copy,
-        imgproc::ColorConversionCodes::COLOR_BGR2GRAY.into(), // TODO: this is suppoesed to be be COLOR_GRAY2BGR?
-    )
-    .unwrap();
-
-    let output_mat = img_copy.clone();
+    // Convert back to rgb so we can draw colored lines
+    ConvertColorStage::grayscale_to_rgba().compute(&mut img_copy);
 
     // Step three: find the four-sided contour with the largest area
     let mut biggest_contour: Contour = Vector::new();
     let mut area_of_biggest_contour = 0.0;
     for contour in contours {
-        // Simplify the contour so that we know the number of verticies is correct
+        // Simplify the contour so that we know the number of vertices is correct
         let mut simplified_contour: Contour = Vector::new();
         let epsilon: f64 = 0.02 * imgproc::arc_length(&contour, true).unwrap();
         imgproc::approx_poly_dp(&contour, &mut simplified_contour, epsilon, true).unwrap();
@@ -143,5 +99,5 @@ pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
         }
     }
 
-    (output_mat, biggest_contour)
+    (img_copy, biggest_contour)
 }
