@@ -1,30 +1,59 @@
 use cv::prelude::*;
 use opencv as cv;
 
-use super::PipelineStage;
+/// Represents a stage in a CV pipeline. Each stage takes an image as input and
+/// modifies that image in some way before the image is passed to the next stage.
+pub trait PipelineStage {
+    /// Perform the computations on the provided image.
+    fn compute(&self, image: &mut Mat);
 
-pub struct Pipeline {
-    stages: Vec<Box<dyn PipelineStage>>,
-}
+    /// Perform the computations on a copy of the image, then return that copy.
+    fn compute_on_a_copy(&self, image: &Mat) -> Mat {
+        let mut out = image.clone();
 
-impl Pipeline {
-    pub fn new() -> Self {
-        Self { stages: vec![] }
+        self.compute(&mut out);
+
+        out
     }
 
-    pub fn from_vec(stages: Vec<Box<dyn PipelineStage>>) -> Self {
-        Self { stages }
-    }
-
-    pub fn add_stage<U: PipelineStage + 'static>(&mut self, stage: U) {
-        self.stages.push(Box::new(stage));
-    }
-}
-
-impl PipelineStage for Pipeline {
-    fn compute(&self, image: &mut Mat) {
-        for stage in &self.stages {
-            stage.compute(image);
+    fn chain<S2>(self, stage: S2) -> ChainedPipeline<Self, S2>
+    where
+        Self: Sized,
+        S2: PipelineStage,
+    {
+        ChainedPipeline {
+            stage1: self,
+            stage2: stage,
         }
+    }
+}
+
+pub struct ChainedPipeline<S1, S2>
+where
+    S1: PipelineStage,
+    S2: PipelineStage,
+{
+    stage1: S1,
+    stage2: S2,
+}
+
+impl<S1, S2> PipelineStage for ChainedPipeline<S1, S2>
+where
+    S1: PipelineStage,
+    S2: PipelineStage,
+{
+    fn compute(&self, image: &mut Mat) {
+        self.stage1.compute(image);
+        self.stage2.compute(image);
+    }
+}
+
+/// `PipelineStage` implementation for functions that take a `&mut Mat`
+impl<T> PipelineStage for T
+where 
+    T: Fn(&mut Mat),
+{
+    fn compute(&self, image: &mut Mat) {
+        self(image)
     }
 }
