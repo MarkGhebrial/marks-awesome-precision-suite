@@ -4,7 +4,7 @@ use cv::imgproc;
 use opencv as cv;
 use opencv::core::ModifyInplace;
 
-use super::super::PipelineStage;
+use crate::pipeline::PipelineStage;
 
 pub struct GaussianBlurStage {
     pub size: Size,

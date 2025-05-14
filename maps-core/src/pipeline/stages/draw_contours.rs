@@ -1,12 +1,12 @@
-use opencv as cv;
 use cv::core::no_array;
-use cv::core::ToInputArray;
-use cv::imgproc;
 use cv::core::Mat;
 use cv::core::Point;
 use cv::core::Scalar;
+use cv::core::ToInputArray;
+use cv::imgproc;
+use opencv as cv;
 
-use super::super::PipelineStage;
+use crate::pipeline::PipelineStage;
 
 pub struct DrawContoursStage<T: ToInputArray> {
     contours: T,
@@ -37,7 +37,8 @@ impl<T: ToInputArray> PipelineStage for DrawContoursStage<T> {
             imgproc::LineTypes::LINE_8.into(),
             &no_array(),
             i32::MAX,
-            Point::new(0,0)
-        ).unwrap();
+            Point::new(0, 0),
+        )
+        .unwrap();
     }
 }

@@ -1,11 +1,10 @@
-use opencv as cv;
 use cv::core::Mat;
-use cv::core::Vector;
 use cv::core::Point;
+use cv::core::Vector;
 use cv::imgcodecs;
 use cv::imgproc;
+use opencv as cv;
 use pipeline::stages::*;
-use pipeline::Pipeline;
 use pipeline::PipelineStage;
 
 // mod cv_pipeline;
@@ -27,7 +26,7 @@ pub mod parameters;
 
 const THRESHOLD: f64 = 159.0;
 
-// `Vector`` is the C++ vector type. It is different from Rust's `Vec` type
+// `Vector` is the C++ vector type. It is different from Rust's `Vec` type
 type Contour = Vector<Point>;
 
 pub fn load_image() -> Mat {
@@ -60,10 +59,14 @@ pub fn test_function() -> Mat {
 }
 
 pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
-    let mut pipeline: Pipeline = Pipeline::new();
-    pipeline.add_stage(ConvertColorStage::rgba_to_grayscale());
-    pipeline.add_stage(GaussianBlurStage::default());
-    pipeline.add_stage(ThresholdStage::default().set_threshold(THRESHOLD));
+    // let mut pipeline: Pipeline = Pipeline::new();
+    // pipeline.add_stage(ConvertColorStage::rgba_to_grayscale());
+    // pipeline.add_stage(GaussianBlurStage::default());
+    // pipeline.add_stage(ThresholdStage::default().set_threshold(THRESHOLD));
+
+    let pipeline = ConvertColorStage::rgba_to_grayscale()
+        .chain(GaussianBlurStage::default())
+        .chain(ThresholdStage::default().set_threshold(THRESHOLD));
 
     let mut img_copy = pipeline.compute_on_a_copy(image);
 

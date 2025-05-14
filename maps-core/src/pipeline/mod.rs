@@ -21,25 +21,45 @@ pub trait PipelineStage {
 
         out
     }
-}
 
-/// Takes an image as input and returns some other type.
-pub trait FinalPipelineStage {
-    type Output;
-
-    fn compute(&self, image: &mut Mat) -> Self::Output;
-
-    fn compute_on_a_copy(&self, image: &Mat) -> (Mat, Self::Output) {
-        let mut output_image = image.clone();
-
-        let output_data = self.compute(&mut output_image);
-
-        (output_image, output_data)
+    fn chain<S2>(self, stage: S2) -> ChainedPipeline<Self, S2>
+    where
+        Self: Sized,
+        S2: PipelineStage,
+    {
+        ChainedPipeline {
+            stage1: self,
+            stage2: stage,
+        }
     }
 }
 
-impl<T> PipelineStage for dyn FinalPipelineStage<Output = T> {
+pub struct ChainedPipeline<S1, S2>
+where
+    S1: PipelineStage,
+    S2: PipelineStage,
+{
+    stage1: S1,
+    stage2: S2,
+}
+
+impl<S1, S2> PipelineStage for ChainedPipeline<S1, S2>
+where
+    S1: PipelineStage,
+    S2: PipelineStage,
+{
     fn compute(&self, image: &mut Mat) {
-        self.compute(image); // Do the computations on the image, but don't return the extra data
+        self.stage1.compute(image);
+        self.stage2.compute(image);
+    }
+}
+
+/// `PipelineStage` implementation for functions that take a `&mut Mat`
+impl<T> PipelineStage for T
+where 
+    T: Fn(&mut Mat),
+{
+    fn compute(&self, image: &mut Mat) {
+        self(image)
     }
 }
