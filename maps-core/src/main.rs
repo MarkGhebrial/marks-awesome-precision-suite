@@ -1,10 +1,9 @@
-use maps_core::find_target_corners;
+// use maps_core::find_target_corners;
 use opencv::core::Size;
 // use opencv::core::{Scalar, VecN};
 use opencv::highgui;
 use opencv::highgui::{/*named_window_def,*/ WINDOW_NORMAL};
 use opencv::imgcodecs;
-use opencv::imgproc;
 use opencv::prelude::*;
 // use opencv::viz::imshow_def;
 
@@ -17,11 +16,10 @@ fn main() {
     )
     .expect("Could not find image.");
 
-    let mut pipeline = Pipeline::new();
-    pipeline.add_stage(GaussianBlurStage {
+    let pipeline = GaussianBlurStage {
         size: Size::new(15, 15),
         sigma_x: 0.0,
-    });
+    };
 
     pipeline.compute(&mut image);
 

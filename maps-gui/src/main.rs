@@ -86,7 +86,12 @@ impl eframe::App for MyApp {
         // Draw bottom panel
         egui::TopBottomPanel::bottom("bottom panel")
             .resizable(true)
-            .show(ctx, |ui| ui.heading("Bottom panel"));
+            .show(ctx, |ui| {
+                ui.heading("Bottom panel");
+                ui.label("This is some text. Lorem Ipsum amirite?");
+
+                ui.allocate_space(ui.available_size());
+            });
 
         // Draw right panel
         egui::SidePanel::right("right panel")

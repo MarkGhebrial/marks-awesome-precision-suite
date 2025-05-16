@@ -59,11 +59,6 @@ pub fn test_function() -> Mat {
 }
 
 pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
-    // let mut pipeline: Pipeline = Pipeline::new();
-    // pipeline.add_stage(ConvertColorStage::rgba_to_grayscale());
-    // pipeline.add_stage(GaussianBlurStage::default());
-    // pipeline.add_stage(ThresholdStage::default().set_threshold(THRESHOLD));
-
     let pipeline = ConvertColorStage::rgba_to_grayscale()
         .chain(GaussianBlurStage::default())
         .chain(ThresholdStage::default().set_threshold(THRESHOLD));
