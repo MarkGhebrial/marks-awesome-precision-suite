@@ -25,9 +25,9 @@ fn main() {
         ..Default::default()
     };
 
-    let (tx_1, rx_1): (Sender<Mat>, Receiver<Mat>) = mpsc::channel();
+    let (tx_1, rx_1) = mpsc::channel::<Vec<(String, Mat)>>();
 
-    let (tx_2, rx_2): (Sender<MAPSPipelineParams>, Receiver<MAPSPipelineParams>) = mpsc::channel();
+    let (tx_2, rx_2) = mpsc::channel::<MAPSPipelineParams>();
 
     // Spawn the thread that'll handle the image processing nonsense
     thread::spawn(move || {
@@ -37,18 +37,18 @@ fn main() {
                 Err(RecvError) => break, // The channel has disconnected, so exit the loop and kill the thread
             };
 
-            let img: Mat = if params.target_dimensions.0 < 5.0 {
-                let img = maps_core::load_image();
-                let (img, contour) = maps_core::find_target_corners(&img);
+            let mut out = Vec::new();
 
-                println!("Target corners: {:?}", contour);
+            let img0 = maps_core::load_image();
 
-                img
-            } else {
-                maps_core::test_function()
-            };
+            let (img1, corners) = maps_core::find_target_corners(&img0);
 
-            tx_1.send(img).unwrap();
+            let img2 = maps_core::transform_image(&img0, corners);
+
+            out.push(("Original image".into(), img0));
+            out.push(("Thresholded image (pretransform)".into(), img1));
+            out.push(("Transformed image".into(), img2));
+            tx_1.send(out).unwrap();
         }
 
         println!("Image processor thread terminating");
@@ -73,7 +73,7 @@ struct MyApp {
 }
 
 impl MyApp {
-    fn new(recv: Receiver<Mat>, send: Sender<MAPSPipelineParams>) -> Self {
+    fn new(recv: Receiver<Vec<(String, Mat)>>, send: Sender<MAPSPipelineParams>) -> Self {
         Self {
             image_viewer_panel: ImageViewerPanel::new(recv),
             settings_panel: SettingsPanel::new(send),

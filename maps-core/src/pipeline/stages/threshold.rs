@@ -62,7 +62,6 @@ impl PipelineStage for ThresholdStage {
 
 /// Wrapper for `opencv::imgproc::adaptive_threshold`
 pub struct AdaptiveThresholdStage {
-    pub threshold: f64,
     pub threshold_type: ThresholdTypes,
     pub adaptive_method: AdaptiveThresholdTypes,
     pub block_size: i32,
@@ -70,23 +69,34 @@ pub struct AdaptiveThresholdStage {
 }
 
 impl AdaptiveThresholdStage {
-    fn set_threshold(&mut self, thresh: f64) {
-        self.threshold = thresh;
+    pub fn set_threshold_type(mut self, thresh_type: ThresholdTypes) -> Self {
+        self.threshold_type = thresh_type;
+        self
     }
 
-    fn threshold_type(&mut self, thresh_type: ThresholdTypes) {
-        self.threshold_type = thresh_type;
+    pub fn set_adaptive_method(mut self, method: AdaptiveThresholdTypes) -> Self {
+        self.adaptive_method = method;
+        self
+    }
+
+    pub fn set_block_size(mut self, block_size: i32) -> Self {
+        self.block_size = block_size;
+        self
+    }
+
+    pub fn set_c(mut self, c: f64) -> Self {
+        self.c = c;
+        self
     }
 }
 
 impl Default for AdaptiveThresholdStage {
     fn default() -> Self {
         Self {
-            threshold: 150.0,
             threshold_type: ThresholdTypes::THRESH_BINARY,
             adaptive_method: AdaptiveThresholdTypes::ADAPTIVE_THRESH_GAUSSIAN_C,
             block_size: 3,
-            c: 5.0, // TODO: Look up what this parameter does and set a sensible default value
+            c: 0.0, // TODO: Look up what this parameter does and set a sensible default value
         }
     }
 }

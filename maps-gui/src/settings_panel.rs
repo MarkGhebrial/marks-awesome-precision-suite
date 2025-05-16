@@ -28,7 +28,6 @@ impl SettingsPanel {
         let inner_response = Frame::none().show(ui, |ui| {
             ui.heading("Target settings").on_hover_text("Tooltip");
 
-
             Grid::new("settings panel grid").show(ui, |ui| {
                 ui.label("Target height: ");
 

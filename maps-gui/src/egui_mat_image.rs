@@ -11,7 +11,7 @@ use egui::ColorImage;
 use egui::ImageData;
 use egui::TextureOptions;
 
-// This module converts images from opencv Mats to egui-compatible types.
+///! This module converts images from opencv Mats to egui-compatible types.
 
 pub struct MatImage {
     mat: Option<Mat>,

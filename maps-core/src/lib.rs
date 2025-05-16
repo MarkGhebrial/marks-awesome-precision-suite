@@ -24,6 +24,7 @@ pub mod parameters;
 //      - Params: thresholding mode and
 //  4. Draw
 
+// TODO: Delete this constant
 const THRESHOLD: f64 = 159.0;
 
 // `Vector` is the C++ vector type. It is different from Rust's `Vec` type
@@ -36,32 +37,33 @@ pub fn load_image() -> Mat {
     .expect("Could not find image.")
 }
 
-pub fn test_function() -> Mat {
-    let mut image: Mat = load_image();
+// pub fn test_function() -> Mat {
+//     let mut image: Mat = load_image();
 
-    let (_, contour) = find_target_corners(&image);
+//     let (_, contour) = find_target_corners(&image);
 
-    // cv::imgproc::draw_contours_def(&mut image, &contour, -1, Scalar::from([0.0, 255.0, 0.0, 0.0])).unwrap();
-    for i in 0..contour.len() {
-        imgproc::line(
-            &mut image,
-            contour.get(i).unwrap(),
-            contour.get((i + 1) % contour.len()).unwrap(),
-            [0.0, 255.0, 0.0, 0.0].into(),
-            5,
-            imgproc::LINE_8,
-            0,
-        )
-        .unwrap();
-    }
+//     // cv::imgproc::draw_contours_def(&mut image, &contour, -1, Scalar::from([0.0, 255.0, 0.0, 0.0])).unwrap();
+//     for i in 0..contour.len() {
+//         imgproc::line(
+//             &mut image,
+//             contour.get(i).unwrap(),
+//             contour.get((i + 1) % contour.len()).unwrap(),
+//             [0.0, 255.0, 0.0, 0.0].into(),
+//             5,
+//             imgproc::LINE_8,
+//             0,
+//         )
+//         .unwrap();
+//     }
 
-    image
-}
+//     image
+// }
 
-pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
+pub fn find_target_corners(image: &Mat) -> (Mat, Vec<Point>) {
     let pipeline = ConvertColorStage::rgba_to_grayscale()
         .chain(GaussianBlurStage::default())
         .chain(ThresholdStage::default().set_threshold(THRESHOLD));
+        // .chain(AdaptiveThresholdStage::default().set_threshold_type(imgproc::ThresholdTypes::THRESH_BINARY_INV));
 
     let mut img_copy = pipeline.compute_on_a_copy(image);
 
@@ -79,7 +81,7 @@ pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
     ConvertColorStage::grayscale_to_rgba().compute(&mut img_copy);
 
     // Step three: find the four-sided contour with the largest area
-    let mut biggest_contour: Contour = Vector::new();
+    let mut biggest_contour: Vec<Point> = Vec::new();
     let mut area_of_biggest_contour = 0.0;
     for contour in contours {
         // Simplify the contour so that we know the number of vertices is correct
@@ -92,10 +94,15 @@ pub fn find_target_corners(image: &Mat) -> (Mat, Vector<Point>) {
 
             if area > area_of_biggest_contour {
                 area_of_biggest_contour = area;
-                biggest_contour = simplified_contour;
+                biggest_contour = simplified_contour.into();
             }
         }
     }
 
     (img_copy, biggest_contour)
+}
+
+pub fn transform_image(image: &Mat, corners: Vec<Point>) -> Mat {
+    TransformStage::new(corners[0..4].try_into().unwrap())
+        .compute_on_a_copy(image)
 }
