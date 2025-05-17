@@ -44,7 +44,7 @@ impl MatImage {
 
         let color_image = match mat.channels() {
             1 => ColorImage::from_gray(
-                // The from_gray and from_rgb methods copy all the image bytres in the mat
+                // The from_gray and from_rgb methods copy all the image bytes in the mat
                 [
                     mat.size().unwrap().width as usize,
                     mat.size().unwrap().height as usize,
