@@ -3,7 +3,6 @@ use std::sync::mpsc::Receiver;
 use eframe::egui;
 
 use eframe::egui::ImageSource;
-use eframe::egui::Slider;
 use egui::Image;
 use egui::Ui;
 
@@ -11,7 +10,8 @@ use cv::core::Mat;
 use opencv as cv;
 
 use crate::egui_mat_image::MatImage;
-use crate::SharedState;
+use crate::app::SharedState;
+use crate::app::GUIPanel;
 
 pub struct ImageViewerPanel {
     recv: Receiver<Vec<(String, Mat)>>,
@@ -31,7 +31,7 @@ impl ImageViewerPanel {
     }
 }
 
-impl crate::GUIPanel for ImageViewerPanel {
+impl GUIPanel for ImageViewerPanel {
     fn draw_ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         println!("Index of image to show: {}", shared_state.index_of_image_to_show);
 

@@ -10,7 +10,8 @@ use egui::Ui;
 
 use maps_core::parameters::*;
 
-use crate::SharedState;
+use crate::app::SharedState;
+use crate::app::GUIPanel;
 
 pub struct SettingsPanel {
     send: Sender<MAPSPipelineParams>,
@@ -26,7 +27,7 @@ impl SettingsPanel {
     }
 }
 
-impl crate::GUIPanel for SettingsPanel {
+impl GUIPanel for SettingsPanel {
     fn draw_ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         let prev_params = self.params.clone();
 
@@ -54,6 +55,7 @@ impl crate::GUIPanel for SettingsPanel {
                 _ => {}
             }
 
+            // Make the frame fill the full width of the panel
             ui.set_width(ui.available_width());
         });
 
