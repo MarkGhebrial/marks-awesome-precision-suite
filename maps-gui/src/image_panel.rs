@@ -3,6 +3,7 @@ use std::sync::mpsc::Receiver;
 use eframe::egui;
 
 use eframe::egui::ImageSource;
+use eframe::egui::Slider;
 use egui::Image;
 use egui::Ui;
 
@@ -10,6 +11,7 @@ use cv::core::Mat;
 use opencv as cv;
 
 use crate::egui_mat_image::MatImage;
+use crate::SharedState;
 
 pub struct ImageViewerPanel {
     recv: Receiver<Vec<(String, Mat)>>,
@@ -27,11 +29,15 @@ impl ImageViewerPanel {
             dropdown_selection: "".into(),
         }
     }
+}
 
-    pub fn draw_ui(&mut self, ui: &mut Ui) {
+impl crate::GUIPanel for ImageViewerPanel {
+    fn draw_ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
+        println!("Index of image to show: {}", shared_state.index_of_image_to_show);
+
         if let Ok(v) = self.recv.try_recv() {
             self.image
-                .set_mat(v[2].1.clone(), &ui.ctx())
+                .set_mat(v[shared_state.index_of_image_to_show].1.clone(), &ui.ctx())
                 .expect("Error updating image");
         }
 
