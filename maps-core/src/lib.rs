@@ -4,10 +4,11 @@ use cv::core::Vector;
 use cv::imgcodecs;
 use cv::imgproc;
 use opencv as cv;
+use opencv::core::Scalar;
+use parameters::ThresholdMode;
 use pipeline::stages::*;
 use pipeline::PipelineStage;
 
-// mod cv_pipeline;
 pub mod pipeline;
 
 pub mod parameters;
@@ -59,11 +60,23 @@ pub fn load_image() -> Mat {
 //     image
 // }
 
-pub fn find_target_corners(image: &Mat) -> (Mat, Vec<Point>) {
+pub fn find_target_corners(image: &Mat, threshold_method: ThresholdMode) -> (Mat, Vec<Point>) {
     let pipeline = ConvertColorStage::rgba_to_grayscale()
         .chain(GaussianBlurStage::default())
-        .chain(ThresholdStage::default().set_threshold(THRESHOLD));
-        // .chain(AdaptiveThresholdStage::default().set_threshold_type(imgproc::ThresholdTypes::THRESH_BINARY_INV));
+        .dyn_chain(match threshold_method {
+            ThresholdMode::Manual { thresh } => {
+                Box::new(ThresholdStage::default().set_threshold(thresh))
+            }
+            ThresholdMode::Otsu => {
+                println!("TODO: Implement Otsu thresholding");
+                Box::new(ThresholdStage::default().set_threshold(THRESHOLD))
+            }
+            ThresholdMode::Automatic { c } => {
+                Box::new(AdaptiveThresholdStage::default().set_adaptive_method(
+                    imgproc::AdaptiveThresholdTypes::ADAPTIVE_THRESH_GAUSSIAN_C,
+                ))
+            }
+        });
 
     let mut img_copy = pipeline.compute_on_a_copy(image);
 
@@ -83,7 +96,7 @@ pub fn find_target_corners(image: &Mat) -> (Mat, Vec<Point>) {
     // Step three: find the four-sided contour with the largest area
     let mut biggest_contour: Vec<Point> = Vec::new();
     let mut area_of_biggest_contour = 0.0;
-    for contour in contours {
+    for contour in contours.iter() {
         // Simplify the contour so that we know the number of vertices is correct
         let mut simplified_contour: Contour = Vector::new();
         let epsilon: f64 = 0.02 * imgproc::arc_length(&contour, true).unwrap();
@@ -99,10 +112,19 @@ pub fn find_target_corners(image: &Mat) -> (Mat, Vec<Point>) {
         }
     }
 
+    // Draw markers on the four corners
+    DrawMarkerStage::new(
+        biggest_contour.clone(),
+        Scalar::from_array([255.0, 90.0, 0.0, 0.0]),
+        15,
+    )
+    .marker_type(imgproc::MarkerTypes::MARKER_TILTED_CROSS)
+    .marker_size(150)
+    .compute(&mut img_copy);
+
     (img_copy, biggest_contour)
 }
 
 pub fn transform_image(image: &Mat, corners: Vec<Point>) -> Mat {
-    TransformStage::new(corners[0..4].try_into().unwrap())
-        .compute_on_a_copy(image)
+    TransformStage::new(corners[0..4].try_into().unwrap()).compute_on_a_copy(image)
 }
