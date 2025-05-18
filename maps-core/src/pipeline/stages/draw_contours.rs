@@ -8,6 +8,8 @@ use opencv as cv;
 
 use crate::pipeline::PipelineStage;
 
+/// Draws multiple contours onto an image. Will panic if given a single contour
+/// instead of an array of contours.
 pub struct DrawContoursStage<T: ToInputArray> {
     contours: T,
     color: Scalar,
@@ -26,7 +28,8 @@ impl<T: ToInputArray> DrawContoursStage<T> {
 
 impl<T: ToInputArray> PipelineStage for DrawContoursStage<T> {
     fn compute(&self, image: &mut Mat) {
-        // TODO: This fails an assertion somewhere in opencv:
+        // TODO: This fails an assertion somewhere in opencv, but only if
+        // `self.contours`` is a single contour instead of an array of contours:
         // OpenCV(4.11.0) /usr/src/debug/opencv/opencv/modules/core/src/matrix_wrap.cpp:43: error: (-215:Assertion failed) i < 0 in function 'getMat_'\n
         imgproc::draw_contours(
             image,

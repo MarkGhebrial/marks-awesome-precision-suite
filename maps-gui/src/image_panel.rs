@@ -9,9 +9,9 @@ use egui::Ui;
 use cv::core::Mat;
 use opencv as cv;
 
-use crate::egui_mat_image::MatImage;
-use crate::app::SharedState;
 use crate::app::GUIPanel;
+use crate::app::SharedState;
+use crate::egui_mat_image::MatImage;
 
 pub struct ImageViewerPanel {
     recv: Receiver<Vec<(String, Mat)>>,
@@ -33,7 +33,10 @@ impl ImageViewerPanel {
 
 impl GUIPanel for ImageViewerPanel {
     fn draw_ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
-        println!("Index of image to show: {}", shared_state.index_of_image_to_show);
+        println!(
+            "Index of image to show: {}",
+            shared_state.index_of_image_to_show
+        );
 
         if let Ok(v) = self.recv.try_recv() {
             self.image

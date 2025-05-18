@@ -58,7 +58,8 @@ impl PipelineStage for TransformStage {
             sorted_corners.set(index, point).unwrap();
         }
 
-        let transform = imgproc::get_perspective_transform_def(&sorted_corners, &destination_points).unwrap();
+        let transform =
+            imgproc::get_perspective_transform_def(&sorted_corners, &destination_points).unwrap();
 
         // We have to do this unsafe `modify_inplace` nonsense because using the
         // warp_perspective function without cloning the Mat's data requires

@@ -44,7 +44,7 @@ fn main() {
 
             let img0 = maps_core::load_image();
 
-            let (img1, corners) = maps_core::find_target_corners(&img0);
+            let (img1, corners) = maps_core::find_target_corners(&img0, params.corner_thresh_mode);
 
             let img2 = maps_core::transform_image(&img0, corners);
 
@@ -69,4 +69,3 @@ fn main() {
     )
     .unwrap();
 }
-

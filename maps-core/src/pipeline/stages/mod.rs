@@ -4,6 +4,9 @@ pub use gaussian_blur::*;
 mod draw_contours;
 pub use draw_contours::*;
 
+mod draw_marker;
+pub use draw_marker::*;
+
 mod threshold;
 pub use threshold::*;
 

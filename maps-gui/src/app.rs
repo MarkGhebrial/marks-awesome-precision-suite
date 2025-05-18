@@ -1,8 +1,8 @@
 use eframe::egui;
 use egui::Ui;
 
-use opencv as cv;
 use cv::core::Mat;
+use opencv as cv;
 
 use std::sync::mpsc::{Receiver, Sender};
 
@@ -29,7 +29,9 @@ pub struct SharedState {
 impl Default for SharedState {
     fn default() -> Self {
         Self {
-            file_path: "/home/markg/Documents/Code/Marks-Awesome-Precision-Suite/images/testtarget15.jpg".into(),
+            file_path:
+                "/home/markg/Documents/Code/Marks-Awesome-Precision-Suite/images/testtarget15.jpg"
+                    .into(),
             index_of_image_to_show: 0,
         }
     }

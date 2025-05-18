@@ -1,8 +1,8 @@
-use opencv as cv;
-use cv::imgproc;
 use cv::core::Mat;
 use cv::core::ModifyInplace;
+use cv::imgproc;
 use imgproc::ColorConversionCodes;
+use opencv as cv;
 
 use crate::pipeline::PipelineStage;
 

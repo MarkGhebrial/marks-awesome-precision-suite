@@ -10,8 +10,8 @@ use egui::Ui;
 
 use maps_core::parameters::*;
 
-use crate::app::SharedState;
 use crate::app::GUIPanel;
+use crate::app::SharedState;
 
 pub struct SettingsPanel {
     send: Sender<MAPSPipelineParams>,
@@ -35,23 +35,36 @@ impl GUIPanel for SettingsPanel {
             ui.heading("Corner settings");
 
             ui.label("Corner threshold mode");
-            
+
             ui.horizontal(|ui| {
-                let manual_button = ui.add(SelectableLabel::new(match self.params.corner_thresh_mode {
-                    ThresholdMode::Manual { thresh: _ } => true,
-                    _ => false
-                }, "Manual"));
+                let manual_button = ui.add(SelectableLabel::new(
+                    match self.params.corner_thresh_mode {
+                        ThresholdMode::Manual { thresh: _ } => true,
+                        _ => false,
+                    },
+                    "Manual",
+                ));
                 if manual_button.clicked() {
                     self.params.corner_thresh_mode = ThresholdMode::Manual { thresh: 0.0 };
                 }
 
                 // ui.selectable_value(&mut self.params.corner_thresh_mode, ThresholdMode::Manual { thresh: 0.0 }, "Manual");
-                ui.selectable_value(&mut self.params.corner_thresh_mode, ThresholdMode::Automatic { c: 0.0 }, "Automatic");
-                ui.selectable_value(&mut self.params.corner_thresh_mode, ThresholdMode::Otsu, "Otsu");
+                ui.selectable_value(
+                    &mut self.params.corner_thresh_mode,
+                    ThresholdMode::Automatic { c: 0.0 },
+                    "Automatic",
+                );
+                ui.selectable_value(
+                    &mut self.params.corner_thresh_mode,
+                    ThresholdMode::Otsu,
+                    "Otsu",
+                );
             });
 
             match &mut self.params.corner_thresh_mode {
-                ThresholdMode::Manual { thresh } => { ui.add(Slider::new(thresh, 0.0..=255.0)); },
+                ThresholdMode::Manual { thresh } => {
+                    ui.add(Slider::new(thresh, 0.0..=255.0));
+                }
                 _ => {}
             }
 
@@ -88,12 +101,10 @@ impl GUIPanel for SettingsPanel {
         if corner_settings_frame_response.response.contains_pointer() {
             ui.label("CORNER SETTINGS ARE BEING HOVERED");
             shared_state.index_of_image_to_show = 1;
-        }
-        else if target_settings_frame_response.response.contains_pointer() {
+        } else if target_settings_frame_response.response.contains_pointer() {
             ui.label("TARGET SETTINGS ARE BEING HOVERED");
             shared_state.index_of_image_to_show = 2;
-        }
-        else {
+        } else {
             shared_state.index_of_image_to_show = 0;
         }
 

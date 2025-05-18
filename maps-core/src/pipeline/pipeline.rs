@@ -26,6 +26,18 @@ pub trait PipelineStage {
             stage2: stage,
         }
     }
+
+    /// Chain this pipeline stage with any trait object that implements
+    /// [`PipelineStage`]. Use this function when you want to TODO: finish this comment
+    fn dyn_chain(self, stage: Box<dyn PipelineStage>) -> DynChainedPipeline<Self>
+    where
+        Self: Sized,
+    {
+        DynChainedPipeline {
+            stage1: self,
+            stage2: stage,
+        }
+    }
 }
 
 pub struct ChainedPipeline<S1, S2>
@@ -48,9 +60,29 @@ where
     }
 }
 
-/// `PipelineStage` implementation for functions that take a `&mut Mat`
+pub struct DynChainedPipeline<S1>
+where
+    S1: PipelineStage,
+{
+    stage1: S1,
+    stage2: Box<dyn PipelineStage>,
+}
+
+impl<S1> PipelineStage for DynChainedPipeline<S1>
+where
+    S1: PipelineStage,
+{
+    fn compute(&self, image: &mut Mat) {
+        self.stage1.compute(image);
+        self.stage2.compute(image);
+    }
+}
+
+/// `PipelineStage` implementation for functions that take a `&mut Mat`.
+///
+/// TODO: We're not using this anywhere. Delete it?
 impl<T> PipelineStage for T
-where 
+where
     T: Fn(&mut Mat),
 {
     fn compute(&self, image: &mut Mat) {
