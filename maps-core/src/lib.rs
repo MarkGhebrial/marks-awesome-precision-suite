@@ -1,8 +1,13 @@
+use std::error::Error;
+use std::fmt::Display;
+use std::fmt::Formatter;
+
 use cv::core::Mat;
 use cv::core::Point;
 use cv::core::Vector;
 use cv::imgcodecs;
 use cv::imgproc;
+use imgproc::ThresholdTypes;
 use opencv as cv;
 use opencv::core::Scalar;
 use parameters::ThresholdMode;
@@ -68,10 +73,9 @@ pub fn find_target_corners(image: &Mat, threshold_method: ThresholdMode) -> (Mat
                 Box::new(ThresholdStage::default().set_threshold(thresh))
             }
             ThresholdMode::Otsu => {
-                println!("TODO: Implement Otsu thresholding");
-                Box::new(ThresholdStage::default().set_threshold(THRESHOLD))
+                Box::new(ThresholdStage::default().set_threshold_type(ThresholdTypes::THRESH_OTSU))
             }
-            ThresholdMode::Automatic { c } => {
+            ThresholdMode::Adaptive { thresh: _ } => {
                 Box::new(AdaptiveThresholdStage::default().set_adaptive_method(
                     imgproc::AdaptiveThresholdTypes::ADAPTIVE_THRESH_GAUSSIAN_C,
                 ))
@@ -125,6 +129,30 @@ pub fn find_target_corners(image: &Mat, threshold_method: ThresholdMode) -> (Mat
     (img_copy, biggest_contour)
 }
 
-pub fn transform_image(image: &Mat, corners: Vec<Point>) -> Mat {
-    TransformStage::new(corners[0..4].try_into().unwrap()).compute_on_a_copy(image)
+/// TODO: Is an entire new error type really needed here?
+#[derive(Debug)]
+pub struct TransformError;
+
+impl Display for TransformError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("wrong number of points")
+    }
+}
+
+impl Error for TransformError {}
+
+pub fn transform_image(
+    image: &Mat,
+    corners: Vec<Point>,
+    width: f64,
+    height: f64,
+) -> Result<Mat, TransformError> {
+    if corners.len() != 4 {
+        return Err(TransformError);
+    }
+
+    Ok(TransformStage::new(corners[0..4].try_into().unwrap())
+        .aspect_ratio(width / height)
+        .width(1500)
+        .compute_on_a_copy(image))
 }

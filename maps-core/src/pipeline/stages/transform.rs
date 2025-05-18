@@ -12,15 +12,64 @@ use crate::pipeline::PipelineStage;
 pub struct TransformStage {
     height: i32,
     width: i32,
+    /// Width to height aspect ratio. Enforced by `.width()` and `.height()` if
+    /// Some.
+    aspect_ratio: Option<f64>,
+
     corners: [Point; 4],
 }
 
 impl TransformStage {
+    /// Default width, height: 500, 500
     pub fn new(corners: [Point; 4]) -> Self {
         Self {
             height: 500, // TODO: change the default height and width
             width: 500,
+            aspect_ratio: None,
             corners,
+        }
+    }
+
+    /// Set the width/height aspect ratio. The ratio will be enforced in
+    /// subsequent calls to `.width()` and `.height()`.
+    pub fn aspect_ratio(mut self, width_to_height: f64) -> Self {
+        self.aspect_ratio = Some(width_to_height);
+        self
+    }
+
+    pub fn width(mut self, width: i32) -> Self {
+        self.width = width;
+
+        // If `self.aspect_ratio` is `Some`, then enforce that ratio
+        if let Some(ratio) = self.aspect_ratio {
+            self.height = (self.width as f64 / ratio + 0.5) as i32;
+        }
+        self.enforce_max_dimensions();
+
+        self
+    }
+
+    pub fn height(mut self, height: i32) -> Self {
+        self.height = height;
+
+        // If `self.aspect_ratio` is `Some`, then enforce that ratio
+        if let Some(ratio) = self.aspect_ratio {
+            self.width = (self.height as f64 + ratio + 0.5) as i32;
+        }
+        self.enforce_max_dimensions();
+
+        self
+    }
+
+    /// Make sure the number of pixels in the output image is not too large.
+    /// Eframe asserts that neither the width nor height is more than 16384
+    /// pixels.
+    fn enforce_max_dimensions(&mut self) {
+        if self.width > 16384 {
+            self.width = 16384;
+        }
+        if self.height > 16384 {
+            self.height = 16384;
         }
     }
 }

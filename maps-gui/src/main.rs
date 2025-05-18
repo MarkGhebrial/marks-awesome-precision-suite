@@ -8,6 +8,7 @@ use cv::core::Mat;
 use opencv as cv;
 
 use eframe::egui;
+use egui::Context;
 
 mod app;
 use app::MyApp;
@@ -30,12 +31,12 @@ fn main() {
 
     let (tx_1, rx_1) = mpsc::channel::<Vec<(String, Mat)>>();
 
-    let (tx_2, rx_2) = mpsc::channel::<MAPSPipelineParams>();
+    let (tx_2, rx_2) = mpsc::channel::<(Context, MAPSPipelineParams)>();
 
     // Spawn the thread that'll handle the image processing nonsense
     thread::spawn(move || {
         loop {
-            let params = match rx_2.recv() {
+            let (ctx, params) = match rx_2.recv() {
                 Ok(p) => p,
                 Err(RecvError) => break, // The channel has disconnected, so exit the loop and kill the thread
             };
@@ -46,12 +47,26 @@ fn main() {
 
             let (img1, corners) = maps_core::find_target_corners(&img0, params.corner_thresh_mode);
 
-            let img2 = maps_core::transform_image(&img0, corners);
+            let img2 = maps_core::transform_image(
+                &img0,
+                corners,
+                params.target_dimensions.0,
+                params.target_dimensions.1,
+            );
+            let img2 = match img2 {
+                Ok(img) => img,
+                Err(_) => {
+                    println!("TRANSFORM FAILED!");
+                    img0.clone()
+                }
+            };
 
             out.push(("Original image".into(), img0));
             out.push(("Thresholded image (pretransform)".into(), img1));
             out.push(("Transformed image".into(), img2));
             tx_1.send(out).unwrap();
+
+            ctx.request_repaint();
         }
 
         println!("Image processor thread terminating");

@@ -13,6 +13,8 @@ Here's the general idea:
 
 # Build
 
+### For old C++ prototype:
+
 Initial setup:
 ```bash
 meson setup builddir
@@ -23,6 +25,19 @@ Compilation:
 cd builddir
 meson compile
 src/MAPS <path_to_image> # run the program
+```
+
+### For new Rust rewrite:
+
+Compilation:
+```
+cargo build
+```
+
+Compile and run GUI:
+```
+cd maps-gui
+cargo run
 ```
 
 # License

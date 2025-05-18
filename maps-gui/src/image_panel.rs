@@ -16,7 +16,6 @@ use crate::egui_mat_image::MatImage;
 pub struct ImageViewerPanel {
     recv: Receiver<Vec<(String, Mat)>>,
     image: MatImage,
-    dropdown_selection: String,
 }
 
 impl ImageViewerPanel {
@@ -26,7 +25,7 @@ impl ImageViewerPanel {
         Self {
             recv,
             image,
-            dropdown_selection: "".into(),
+            // dropdown_selection: "".into(),
         }
     }
 }
@@ -43,16 +42,6 @@ impl GUIPanel for ImageViewerPanel {
                 .set_mat(v[shared_state.index_of_image_to_show].1.clone(), &ui.ctx())
                 .expect("Error updating image");
         }
-
-        egui::ComboBox::from_label("Select one!")
-            .selected_text(format!("{}", self.dropdown_selection))
-            .show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.dropdown_selection, "Selection 1".into(), "First");
-                ui.selectable_value(&mut self.dropdown_selection, "Selection 2".into(), "Second");
-                ui.selectable_value(&mut self.dropdown_selection, "Selection 3".into(), "Third");
-            });
-
-        ui.label("Wow so cool (an official message from the image viewer panel)");
 
         match self.image.get_texture() {
             Some(texture) => {

@@ -1,4 +1,5 @@
 use eframe::egui;
+use egui::Context;
 use egui::Ui;
 
 use cv::core::Mat;
@@ -45,7 +46,10 @@ pub struct MyApp {
 }
 
 impl MyApp {
-    pub fn new(recv: Receiver<Vec<(String, Mat)>>, send: Sender<MAPSPipelineParams>) -> Self {
+    pub fn new(
+        recv: Receiver<Vec<(String, Mat)>>,
+        send: Sender<(Context, MAPSPipelineParams)>,
+    ) -> Self {
         Self {
             state: SharedState::default(),
             image_viewer_panel: ImageViewerPanel::new(recv),
@@ -62,6 +66,11 @@ impl eframe::App for MyApp {
             .show(ctx, |ui| {
                 ui.heading("Bottom panel");
                 ui.label("This is some text. Lorem Ipsum amirite?");
+
+                ui.horizontal(|ui| {
+                    ui.label("File path for image: ");
+                    ui.text_edit_singleline(&mut self.state.file_path);
+                });
 
                 ui.allocate_space(ui.available_size());
             });
