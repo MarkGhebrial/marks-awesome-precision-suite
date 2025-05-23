@@ -14,7 +14,7 @@ use egui::TextureOptions;
 ///! This module converts images from opencv Mats to egui-compatible types.
 
 pub struct MatImage {
-    mat: Option<Mat>,
+    mat: Option<Arc<Mat>>,
     texture_id: Option<TextureId>,
 }
 
@@ -26,7 +26,7 @@ impl MatImage {
         }
     }
 
-    // pub fn new_from_mat(mat: Mat) -> Self {
+    // pub fn from_mat(mat: Mat) -> Self {
     //     let mut out = Self::new();
 
     //     out.set_mat(mat);
@@ -34,7 +34,7 @@ impl MatImage {
     //     out
     // }
 
-    pub fn set_mat(&mut self, mat: Mat, ctx: &egui::Context) -> Result<(), Box<dyn Error>> {
+    pub fn set_mat(&mut self, mat: Arc<Mat>, ctx: &egui::Context) -> Result<(), Box<dyn Error>> {
         // Make sure the new mat is not the same as the current mat
         if let Some(current_mat) = &self.mat {
             if mat.data_bytes()? == current_mat.data_bytes()? {

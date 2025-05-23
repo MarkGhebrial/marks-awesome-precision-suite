@@ -8,6 +8,8 @@ use opencv as cv;
 use std::sync::mpsc::{Receiver, Sender};
 
 use crate::ImageViewerPanel;
+use crate::MatsSync;
+use crate::ParamsSync;
 use crate::SettingsPanel;
 
 use maps_core::parameters::MAPSPipelineParams;
@@ -51,14 +53,11 @@ pub struct MyApp {
 }
 
 impl MyApp {
-    pub fn new(
-        recv: Receiver<Vec<(String, Mat)>>,
-        send: Sender<(Context, MAPSPipelineParams)>,
-    ) -> Self {
+    pub fn new(mats: MatsSync, params: ParamsSync) -> Self {
         Self {
             state: SharedState::default(),
-            image_viewer_panel: ImageViewerPanel::new(recv),
-            settings_panel: SettingsPanel::new(send),
+            image_viewer_panel: ImageViewerPanel::new(mats),
+            settings_panel: SettingsPanel::new(params),
         }
     }
 }

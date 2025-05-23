@@ -1,7 +1,7 @@
 use cv::prelude::*;
 use opencv as cv;
 
-/// Represents a stage in an image processing pipeline. Each stage takes an 
+/// Represents a stage in an image processing pipeline. Each stage takes an
 /// image as input and modifies that image in some way before the image is
 /// passed to the next stage.
 pub trait PipelineStage {
@@ -18,13 +18,13 @@ pub trait PipelineStage {
     }
 
     /// Pipe the output of this stage directly into the input of another stage.
-    /// 
+    ///
     /// # Example (TODO: Finish example)
     /// ```rust
     /// use crate::pipeline::stages::*;
-    /// 
+    ///
     /// let pipeline = ConvertColorStage::rgba_to_grayscale().chain(GaussianBlurStage::default());
-    /// 
+    ///
     /// // Converts the image to grayscale, then performs a Gaussian blur
     /// pipeline.compute(&mut some_mat);
     /// ```
@@ -41,14 +41,14 @@ pub trait PipelineStage {
 
     /// Pipe the output of this stage directly into the input of a
     /// [`PipeLineStage`] trait object.
-    /// 
+    ///
     /// Use this function when you don't know the type of the stage ahead of
     /// time.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// let adaptive = true;
-    /// 
+    ///
     /// let pipeline = ConvertColorStage::rgba_to_grayscale().
     ///     .dyn_chain(
     ///         if adaptive {

@@ -1,4 +1,6 @@
 use std::sync::mpsc::Receiver;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use eframe::egui;
 
@@ -12,18 +14,20 @@ use opencv as cv;
 use crate::app::GUIPanel;
 use crate::app::SharedState;
 use crate::egui_mat_image::MatImage;
+use crate::MatsSync;
 
 pub struct ImageViewerPanel {
-    recv: Receiver<Vec<(String, Mat)>>,
+    // recv: Receiver<Vec<(String, Mat)>>,
+    mats: MatsSync,
     image: MatImage,
 }
 
 impl ImageViewerPanel {
-    pub fn new(recv: Receiver<Vec<(String, Mat)>>) -> Self {
+    pub fn new(mats: MatsSync) -> Self {
         let image = MatImage::new();
 
         Self {
-            recv,
+            mats,
             image,
             // dropdown_selection: "".into(),
         }
@@ -37,11 +41,27 @@ impl GUIPanel for ImageViewerPanel {
             shared_state.index_of_image_to_show
         );
 
-        if let Ok(v) = self.recv.try_recv() {
-            self.image
-                .set_mat(v[shared_state.index_of_image_to_show].1.clone(), &ui.ctx())
-                .expect("Error updating image");
+        // if let Ok(v) = self.recv.try_recv() {
+        //     self.image
+        //         .set_mat(v[shared_state.index_of_image_to_show].1.clone(), &ui.ctx())
+        //         .expect("Error updating image");
+        // }
+        let mats = self.mats.lock().unwrap();
+        match mats.get(shared_state.index_of_image_to_show) {
+            None => {
+                ui.label(format!(
+                    "Image at index {} does not exist",
+                    shared_state.index_of_image_to_show
+                ));
+            }
+            Some(img) => {
+                self.image.set_mat(img.1.clone(), ui.ctx()).unwrap();
+            }
         }
+        // self.image.set_mat(
+        //     mats[shared_state.index_of_image_to_show].1.clone(),
+        //     &ui.ctx(),
+        // ).unwrap();
 
         match self.image.get_texture() {
             Some(texture) => {
