@@ -18,12 +18,17 @@ pub trait GUIPanel {
     fn draw_ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState);
 }
 
-/// State shared between different elements of the GUI
+/// State shared between different panels of the GUI.
+///
+/// An instance of this struct is stored in the App struct, and is "injected"
+/// into the different parts of the GUI via the [`GUIPanel`] trait.
+///
+/// State that's only used by one panel should not be stored in this struct.
 pub struct SharedState {
     /// The file path of the image to load
     pub file_path: String,
 
-    /// fdsaf
+    /// TODO: Think of a better solution
     pub index_of_image_to_show: usize,
 }
 
@@ -72,6 +77,8 @@ impl eframe::App for MyApp {
                     ui.text_edit_singleline(&mut self.state.file_path);
                 });
 
+                // Allocate all the available space so the panel doesn't snap back
+                // to its original size when the user finishes resizing it.
                 ui.allocate_space(ui.available_size());
             });
 

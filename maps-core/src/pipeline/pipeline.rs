@@ -1,10 +1,11 @@
 use cv::prelude::*;
 use opencv as cv;
 
-/// Represents a stage in a CV pipeline. Each stage takes an image as input and
-/// modifies that image in some way before the image is passed to the next stage.
+/// Represents a stage in an image processing pipeline. Each stage takes an 
+/// image as input and modifies that image in some way before the image is
+/// passed to the next stage.
 pub trait PipelineStage {
-    /// Perform the computations on the provided image.
+    /// Perform the computations in place on the provided image.
     fn compute(&self, image: &mut Mat);
 
     /// Perform the computations on a copy of the image, then return that copy.
@@ -16,6 +17,17 @@ pub trait PipelineStage {
         out
     }
 
+    /// Pipe the output of this stage directly into the input of another stage.
+    /// 
+    /// # Example (TODO: Finish example)
+    /// ```rust
+    /// use crate::pipeline::stages::*;
+    /// 
+    /// let pipeline = ConvertColorStage::rgba_to_grayscale().chain(GaussianBlurStage::default());
+    /// 
+    /// // Converts the image to grayscale, then performs a Gaussian blur
+    /// pipeline.compute(&mut some_mat);
+    /// ```
     fn chain<S2>(self, stage: S2) -> ChainedPipeline<Self, S2>
     where
         Self: Sized,
@@ -27,8 +39,26 @@ pub trait PipelineStage {
         }
     }
 
-    /// Chain this pipeline stage with any trait object that implements
-    /// [`PipelineStage`]. Use this function when you want to TODO: finish this comment
+    /// Pipe the output of this stage directly into the input of a
+    /// [`PipeLineStage`] trait object.
+    /// 
+    /// Use this function when you don't know the type of the stage ahead of
+    /// time.
+    /// 
+    /// # Example
+    /// ```rust
+    /// let adaptive = true;
+    /// 
+    /// let pipeline = ConvertColorStage::rgba_to_grayscale().
+    ///     .dyn_chain(
+    ///         if adaptive {
+    ///             Box::new(ThresholdStage::default())
+    ///         }
+    ///         else {
+    ///             Box::new(AdaptiveThresholdStage::default())
+    ///         }
+    ///     );
+    /// ```
     fn dyn_chain(self, stage: Box<dyn PipelineStage>) -> DynChainedPipeline<Self>
     where
         Self: Sized,

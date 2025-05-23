@@ -30,9 +30,6 @@ pub mod parameters;
 //      - Params: thresholding mode and
 //  4. Draw
 
-// TODO: Delete this constant
-const THRESHOLD: f64 = 159.0;
-
 // `Vector` is the C++ vector type. It is different from Rust's `Vec` type
 type Contour = Vector<Point>;
 
