@@ -16,8 +16,6 @@ use crate::app::SharedState;
 
 pub struct SettingsPanel {
     send: Sender<(Context, MAPSPipelineParams)>,
-    params: MAPSPipelineParams,
-
     /// Saves the value of the corner manual thresholding slider
     prev_manual_thresh: f64,
 }
@@ -26,7 +24,6 @@ impl SettingsPanel {
     pub fn new(send: Sender<(Context, MAPSPipelineParams)>) -> Self {
         Self {
             send,
-            params: MAPSPipelineParams::default(),
             prev_manual_thresh: 160.0,
         }
     }
@@ -34,7 +31,7 @@ impl SettingsPanel {
 
 impl GUIPanel for SettingsPanel {
     fn draw_ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
-        let prev_params = self.params.clone();
+        let prev_params = shared_state.params.clone();
 
         let corner_settings_frame_response = Frame::none().show(ui, |ui| {
             ui.heading("Corner settings");
@@ -44,7 +41,7 @@ impl GUIPanel for SettingsPanel {
             // Draw radio button for thresholding mode
             ui.horizontal(|ui| {
                 ui.selectable_value(
-                    &mut self.params.corner_thresh_mode,
+                    &mut shared_state.params.corner_thresh_mode,
                     ThresholdMode::Otsu,
                     "Otsu",
                 )
@@ -52,7 +49,7 @@ impl GUIPanel for SettingsPanel {
 
                 let manual_button = ui
                     .add(SelectableLabel::new(
-                        match self.params.corner_thresh_mode {
+                        match shared_state.params.corner_thresh_mode {
                             ThresholdMode::Manual { thresh: _ } => true,
                             _ => false,
                         },
@@ -60,14 +57,14 @@ impl GUIPanel for SettingsPanel {
                     ))
                     .on_hover_text("Simple binary thresholding with a user-defined threshold");
                 if manual_button.clicked() {
-                    self.params.corner_thresh_mode = ThresholdMode::Manual {
+                    shared_state.params.corner_thresh_mode = ThresholdMode::Manual {
                         thresh: self.prev_manual_thresh,
                     };
                 }
 
                 // ui.selectable_value(&mut self.params.corner_thresh_mode, ThresholdMode::Manual { thresh: 0.0 }, "Manual");
                 ui.selectable_value(
-                    &mut self.params.corner_thresh_mode,
+                    &mut shared_state.params.corner_thresh_mode,
                     ThresholdMode::Adaptive { thresh: 0.0 },
                     "Adaptive",
                 )
@@ -76,7 +73,7 @@ impl GUIPanel for SettingsPanel {
                 );
             });
 
-            match &mut self.params.corner_thresh_mode {
+            match &mut shared_state.params.corner_thresh_mode {
                 ThresholdMode::Manual { thresh } => {
                     ui.add(Slider::new(thresh, 0.0..=255.0));
                     self.prev_manual_thresh = *thresh;
@@ -97,7 +94,7 @@ impl GUIPanel for SettingsPanel {
                 ui.label("Target height: ");
 
                 ui.add(Slider::new(
-                    &mut self.params.target_dimensions.1,
+                    &mut shared_state.params.target_dimensions.1,
                     0.0..=30.0,
                 ));
                 ui.end_row();
@@ -105,16 +102,16 @@ impl GUIPanel for SettingsPanel {
                 ui.label("Target width: ");
 
                 ui.add(Slider::new(
-                    &mut self.params.target_dimensions.0,
+                    &mut shared_state.params.target_dimensions.0,
                     0.0..=30.0,
                 ));
                 ui.end_row();
             });
 
             if ui.button("Swap width and height").clicked() {
-                let temp = self.params.target_dimensions.0;
-                self.params.target_dimensions.0 = self.params.target_dimensions.1;
-                self.params.target_dimensions.1 = temp;
+                let temp = shared_state.params.target_dimensions.0;
+                shared_state.params.target_dimensions.0 = shared_state.params.target_dimensions.1;
+                shared_state.params.target_dimensions.1 = temp;
             }
         });
 
@@ -131,17 +128,17 @@ impl GUIPanel for SettingsPanel {
         }
 
         // Check if the user has changed the parameters
-        if prev_params != self.params {
+        if prev_params != shared_state.params {
             // If the parameters have changed, send them to the pipeline thread
             if self
                 .send
-                .send((ui.ctx().clone(), self.params.clone()))
+                .send((ui.ctx().clone(), shared_state.params.clone()))
                 .is_err()
             {
                 println!("Failed to send params to image processing thread");
             }
         }
 
-        println!("Target size: {:?}", self.params.target_dimensions);
+        println!("Target size: {:?}", shared_state.params.target_dimensions);
     }
 }

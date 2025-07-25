@@ -13,6 +13,8 @@ use egui::Context;
 mod app;
 use app::MyApp;
 
+mod util;
+
 mod image_panel;
 use image_panel::*;
 mod settings_panel;

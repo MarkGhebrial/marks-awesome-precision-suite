@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::sync::Arc;
+use std::time::Instant;
 
 use cv::core::Mat;
 use cv::core::MatTraitConst;
@@ -42,6 +43,7 @@ impl MatImage {
             }
         }
 
+        let start = Instant::now();
         let color_image = match mat.channels() {
             1 => ColorImage::from_gray(
                 // The from_gray and from_rgb methods copy all the image bytes in the mat
@@ -63,6 +65,11 @@ impl MatImage {
                 mat.channels()
             ),
         };
+        let elapsed = start.elapsed();
+        println!(
+            "Took {} seconds to copy Mat to ColorImage",
+            elapsed.as_secs_f64()
+        );
 
         let image_data = ImageData::Color(Arc::new(color_image));
 
@@ -79,7 +86,6 @@ impl MatImage {
             Some(texture_manager.alloc("name".into(), image_data, TextureOptions::LINEAR));
 
         self.mat = Some(mat);
-
         Ok(())
     }
 

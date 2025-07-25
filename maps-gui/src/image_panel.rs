@@ -12,6 +12,7 @@ use opencv as cv;
 use crate::app::GUIPanel;
 use crate::app::SharedState;
 use crate::egui_mat_image::MatImage;
+use crate::util;
 
 pub struct ImageViewerPanel {
     recv: Receiver<Vec<(String, Mat)>>,
@@ -53,7 +54,19 @@ impl GUIPanel for ImageViewerPanel {
                 let hover_pos = image_widget_response.hover_pos();
                 match hover_pos {
                     Some(pos) => {
-                        ui.label(format!("Position: x={}, y={}", pos.x, pos.y));
+                        // Map the egui coordinates to the coordinate space of the target
+                        let rect = image_widget_response.interact_rect;
+                        let x_position: f32 = util::map(
+                            pos.x,
+                            rect.min.x..rect.max.x,
+                            0.0..shared_state.params.target_dimensions.1 as f32,
+                        );
+                        let y_position: f32 = util::map(
+                            pos.y,
+                            rect.min.y..rect.max.y,
+                            0.0..shared_state.params.target_dimensions.1 as f32,
+                        );
+                        ui.label(format!("Position: x={}, y={}", x_position, y_position));
                     }
                     None => {
                         ui.label("Not hovered");

@@ -6,6 +6,7 @@ use cv::core::Mat;
 use opencv as cv;
 
 use std::sync::mpsc::{Receiver, Sender};
+use std::time::Instant;
 
 use crate::ImageViewerPanel;
 use crate::SettingsPanel;
@@ -30,6 +31,8 @@ pub struct SharedState {
 
     /// TODO: Think of a better solution
     pub index_of_image_to_show: usize,
+
+    pub params: MAPSPipelineParams,
 }
 
 impl Default for SharedState {
@@ -39,6 +42,7 @@ impl Default for SharedState {
                 "/home/markg/Documents/Code/Marks-Awesome-Precision-Suite/images/testtarget15.jpg"
                     .into(),
             index_of_image_to_show: 0,
+            params: MAPSPipelineParams::default(),
         }
     }
 }
@@ -65,6 +69,8 @@ impl MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let start = Instant::now();
+
         // Draw bottom panel
         egui::TopBottomPanel::bottom("bottom panel")
             .resizable(true)
@@ -94,5 +100,8 @@ impl eframe::App for MyApp {
             // self.settings_panel.draw_ui(ui);
             self.image_viewer_panel.draw_ui(ui, &mut self.state);
         });
+
+        let elapsed = start.elapsed();
+        println!("Took {} seconds to draw GUI", elapsed.as_secs_f64());
     }
 }
