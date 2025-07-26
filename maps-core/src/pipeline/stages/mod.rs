@@ -7,6 +7,9 @@ pub use draw_contours::*;
 mod draw_marker;
 pub use draw_marker::*;
 
+mod erode_dilate;
+pub use erode_dilate::*;
+
 mod threshold;
 pub use threshold::*;
 

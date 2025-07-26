@@ -2,7 +2,6 @@ use std::sync::mpsc::Sender;
 
 use eframe::egui;
 
-use eframe::egui::SelectableLabel;
 use eframe::egui::Slider;
 use egui::Context;
 use egui::Frame;
@@ -11,20 +10,21 @@ use egui::Ui;
 
 use maps_core::parameters::*;
 
+// use crate::adaptive_threshold_settings_panel::AdaptiveThresholdSettingsPanel;
 use crate::app::GUIPanel;
 use crate::app::SharedState;
+use crate::threshold_settings_panel::ThresholdSettingsPanel;
 
 pub struct SettingsPanel {
     send: Sender<(Context, MAPSPipelineParams)>,
-    /// Saves the value of the corner manual thresholding slider
-    prev_manual_thresh: f64,
+    corner_threshold_panel: ThresholdSettingsPanel,
 }
 
 impl SettingsPanel {
     pub fn new(send: Sender<(Context, MAPSPipelineParams)>) -> Self {
         Self {
             send,
-            prev_manual_thresh: 160.0,
+            corner_threshold_panel: ThresholdSettingsPanel::new(),
         }
     }
 }
@@ -34,52 +34,12 @@ impl GUIPanel for SettingsPanel {
         let prev_params = shared_state.params.clone();
 
         let corner_settings_frame_response = Frame::none().show(ui, |ui| {
-            ui.heading("Corner settings");
+            ui.heading("Corner Detection Settings");
 
             ui.label("Corner threshold mode:");
 
-            // Draw radio button for thresholding mode
-            ui.horizontal(|ui| {
-                ui.selectable_value(
-                    &mut shared_state.params.corner_thresh_mode,
-                    ThresholdMode::Otsu,
-                    "Otsu",
-                )
-                .on_hover_text("Automatic thresholding using Otsu's algorithm (recommended)");
-
-                let manual_button = ui
-                    .add(SelectableLabel::new(
-                        match shared_state.params.corner_thresh_mode {
-                            ThresholdMode::Manual { thresh: _ } => true,
-                            _ => false,
-                        },
-                        "Manual",
-                    ))
-                    .on_hover_text("Simple binary thresholding with a user-defined threshold");
-                if manual_button.clicked() {
-                    shared_state.params.corner_thresh_mode = ThresholdMode::Manual {
-                        thresh: self.prev_manual_thresh,
-                    };
-                }
-
-                // ui.selectable_value(&mut self.params.corner_thresh_mode, ThresholdMode::Manual { thresh: 0.0 }, "Manual");
-                ui.selectable_value(
-                    &mut shared_state.params.corner_thresh_mode,
-                    ThresholdMode::Adaptive { thresh: 0.0 },
-                    "Adaptive",
-                )
-                .on_hover_text(
-                    "Adaptive thresholding for images with uneven lighting (not recommended)",
-                );
-            });
-
-            match &mut shared_state.params.corner_thresh_mode {
-                ThresholdMode::Manual { thresh } => {
-                    ui.add(Slider::new(thresh, 0.0..=255.0));
-                    self.prev_manual_thresh = *thresh;
-                }
-                _ => {}
-            }
+            self.corner_threshold_panel
+                .draw_ui(ui, &mut shared_state.params.corner_thresh_mode);
 
             // Make the frame fill the full width of the panel
             ui.set_width(ui.available_width());
@@ -88,7 +48,7 @@ impl GUIPanel for SettingsPanel {
         ui.separator();
 
         let target_settings_frame_response = Frame::none().show(ui, |ui| {
-            ui.heading("Target settings").on_hover_text("Tooltip");
+            ui.heading("Target Settings").on_hover_text("Tooltip");
 
             Grid::new("settings panel grid").show(ui, |ui| {
                 ui.label("Target height: ");
@@ -115,6 +75,14 @@ impl GUIPanel for SettingsPanel {
             }
         });
 
+        ui.separator();
+
+        let dot_detection_settings_frame_response = Frame::none().show(ui, |ui| {
+            ui.heading("Dot Detection Settings");
+
+            // self.corner_threshold_panel.draw_ui(ui, shared_state);
+        });
+
         // Choose what image to display based on which area of the settings
         // panel is currently being hovered.
         if corner_settings_frame_response.response.contains_pointer() {
@@ -123,6 +91,12 @@ impl GUIPanel for SettingsPanel {
         } else if target_settings_frame_response.response.contains_pointer() {
             ui.label("TARGET SETTINGS ARE BEING HOVERED");
             shared_state.index_of_image_to_show = 2;
+        } else if dot_detection_settings_frame_response
+            .response
+            .contains_pointer()
+        {
+            ui.label("DOT DETECTION SETTINGS ARE BEING HOVERED");
+            shared_state.index_of_image_to_show = 3;
         } else {
             shared_state.index_of_image_to_show = 0;
         }
@@ -136,6 +110,7 @@ impl GUIPanel for SettingsPanel {
                 .is_err()
             {
                 println!("Failed to send params to image processing thread");
+                // TODO: This should probably panic
             }
         }
 

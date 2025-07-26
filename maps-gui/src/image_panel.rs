@@ -1,4 +1,5 @@
 use std::sync::mpsc::Receiver;
+use std::time::Instant;
 
 use eframe::egui;
 
@@ -16,6 +17,8 @@ use crate::util;
 
 pub struct ImageViewerPanel {
     recv: Receiver<Vec<(String, Mat)>>,
+    received_images: Option<Vec<(String, Mat)>>,
+
     image: MatImage,
 }
 
@@ -25,6 +28,7 @@ impl ImageViewerPanel {
 
         Self {
             recv,
+            received_images: None,
             image,
             // dropdown_selection: "".into(),
         }
@@ -38,11 +42,24 @@ impl GUIPanel for ImageViewerPanel {
             shared_state.index_of_image_to_show
         );
 
+        // Receive images from the channel.
+        // TODO: Consider moving this into the App struct
         if let Ok(v) = self.recv.try_recv() {
+            self.received_images = Some(v);
+        }
+
+        let start = Instant::now();
+        if let Some(images) = &self.received_images {
+            // Display the relevant image to the screen
             self.image
-                .set_mat(v[shared_state.index_of_image_to_show].1.clone(), &ui.ctx())
+                .set_mat(
+                    images[shared_state.index_of_image_to_show].1.clone(),
+                    &ui.ctx(),
+                )
                 .expect("Error updating image");
         }
+        let elapsed = start.elapsed();
+        println!("Took {} seconds to compare mats", elapsed.as_secs_f64());
 
         match self.image.get_texture() {
             Some(texture) => {

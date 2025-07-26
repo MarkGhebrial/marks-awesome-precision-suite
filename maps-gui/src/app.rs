@@ -97,7 +97,6 @@ impl eframe::App for MyApp {
 
         // Draw image viewer panel
         egui::CentralPanel::default().show(ctx, |ui| {
-            // self.settings_panel.draw_ui(ui);
             self.image_viewer_panel.draw_ui(ui, &mut self.state);
         });
 

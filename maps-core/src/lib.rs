@@ -10,6 +10,7 @@ use cv::imgproc;
 use imgproc::ThresholdTypes;
 use opencv as cv;
 use opencv::core::Scalar;
+use opencv::core::VecN;
 use parameters::ThresholdMode;
 use pipeline::stages::*;
 use pipeline::PipelineStage;
@@ -40,28 +41,6 @@ pub fn load_image() -> Mat {
     .expect("Could not find image.")
 }
 
-// pub fn test_function() -> Mat {
-//     let mut image: Mat = load_image();
-
-//     let (_, contour) = find_target_corners(&image);
-
-//     // cv::imgproc::draw_contours_def(&mut image, &contour, -1, Scalar::from([0.0, 255.0, 0.0, 0.0])).unwrap();
-//     for i in 0..contour.len() {
-//         imgproc::line(
-//             &mut image,
-//             contour.get(i).unwrap(),
-//             contour.get((i + 1) % contour.len()).unwrap(),
-//             [0.0, 255.0, 0.0, 0.0].into(),
-//             5,
-//             imgproc::LINE_8,
-//             0,
-//         )
-//         .unwrap();
-//     }
-
-//     image
-// }
-
 pub fn find_target_corners(image: &Mat, threshold_method: ThresholdMode) -> (Mat, Vec<Point>) {
     let pipeline = ConvertColorStage::rgba_to_grayscale()
         .chain(GaussianBlurStage::default())
@@ -72,11 +51,14 @@ pub fn find_target_corners(image: &Mat, threshold_method: ThresholdMode) -> (Mat
             ThresholdMode::Otsu => {
                 Box::new(ThresholdStage::default().set_threshold_type(ThresholdTypes::THRESH_OTSU))
             }
-            ThresholdMode::Adaptive { thresh: _ } => {
-                Box::new(AdaptiveThresholdStage::default().set_adaptive_method(
-                    imgproc::AdaptiveThresholdTypes::ADAPTIVE_THRESH_GAUSSIAN_C,
-                ))
-            }
+            ThresholdMode::Adaptive { block_size, c } => Box::new(
+                AdaptiveThresholdStage::default()
+                    .set_adaptive_method(
+                        imgproc::AdaptiveThresholdTypes::ADAPTIVE_THRESH_GAUSSIAN_C,
+                    )
+                    .set_block_size(block_size)
+                    .set_c(c),
+            ),
         });
 
     let mut img_copy = pipeline.compute_on_a_copy(image);
@@ -152,4 +134,55 @@ pub fn transform_image(
         .aspect_ratio(width / height)
         .width(1500)
         .compute_on_a_copy(image))
+}
+
+/// Given an image of a bright target with dark dots on it, find the locations of the dots.
+///
+/// TODO: Change return type to `Contour` type alias
+pub fn find_dots(image: &Mat) -> (Mat, Vec<Point>) {
+    // Threshold the image. Probably with an adaptive threshold
+    let thresholded_image = ConvertColorStage::rgba_to_grayscale()
+        .chain(GaussianBlurStage::default())
+        .chain(
+            AdaptiveThresholdStage::default()
+                .set_threshold_type(ThresholdTypes::THRESH_BINARY_INV)
+                .set_block_size(125)
+                .set_c(5.0),
+        ) //.set_adaptive_method(imgproc::AdaptiveThresholdTypes::ADAPTIVE_THRESH_GAUSSIAN_C))
+        .chain(ErodeOrDilateStage::circular_kernel(
+            ErodeOrDilateOperation::ErodeThenDilate,
+            20,
+        ))
+        // .chain(ThresholdStage::default().set_threshold_type(ThresholdTypes::THRESH_OTSU))
+        .compute_on_a_copy(&image);
+
+    // Find blobs/contours
+    let mut contours: Vector<Contour> = Vector::new();
+    imgproc::find_contours_def(
+        &thresholded_image,
+        &mut contours,
+        imgproc::RETR_CCOMP,
+        imgproc::CHAIN_APPROX_SIMPLE,
+    )
+    .unwrap();
+
+    for contour in &contours {
+        println!("Contour has the following points:");
+        for point in contour {
+            println!("{} {}", point.x, point.y);
+        }
+    }
+
+    // new_image is the one with contours drawn on it
+    let new_image = DrawContoursStage::new(&contours, VecN::new(1.0, 1.0, 0.0, 0.0), 2)
+        .compute_on_a_copy(image);
+
+    (new_image, Vec::new())
+
+    // Draw crosshairs on each dot
+    // Draw bounding circle on image
+
+    // Return the coordinates of the contours
+
+    // todo!();
 }

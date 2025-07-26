@@ -15,6 +15,8 @@ use app::MyApp;
 
 mod util;
 
+mod threshold_settings_panel;
+
 mod image_panel;
 use image_panel::*;
 mod settings_panel;
@@ -45,6 +47,7 @@ fn main() {
 
             let mut out = Vec::new();
 
+            // TODO: Move all this image processing sequence into a single function in the maps-core crate
             let img0 = maps_core::load_image();
 
             let (img1, corners) = maps_core::find_target_corners(&img0, params.corner_thresh_mode);
@@ -63,9 +66,12 @@ fn main() {
                 }
             };
 
+            let (img3, _points) = maps_core::find_dots(&img2);
+
             out.push(("Original image".into(), img0));
             out.push(("Thresholded image (pretransform)".into(), img1));
             out.push(("Transformed image".into(), img2));
+            out.push(("Final image".into(), img3));
             tx_1.send(out).unwrap();
 
             ctx.request_repaint();
