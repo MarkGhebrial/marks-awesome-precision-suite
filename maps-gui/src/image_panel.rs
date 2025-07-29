@@ -1,4 +1,5 @@
 use std::sync::mpsc::Receiver;
+use std::sync::Arc;
 use std::time::Instant;
 
 use eframe::egui;
@@ -16,14 +17,14 @@ use crate::egui_mat_image::MatImage;
 use crate::util;
 
 pub struct ImageViewerPanel {
-    recv: Receiver<Vec<(String, Mat)>>,
-    received_images: Option<Vec<(String, Mat)>>,
+    recv: Receiver<Vec<(String, Arc<Mat>)>>,
+    received_images: Option<Vec<(String, Arc<Mat>)>>,
 
     image: MatImage,
 }
 
 impl ImageViewerPanel {
-    pub fn new(recv: Receiver<Vec<(String, Mat)>>) -> Self {
+    pub fn new(recv: Receiver<Vec<(String, Arc<Mat>)>>) -> Self {
         let image = MatImage::new();
 
         Self {
@@ -53,13 +54,13 @@ impl GUIPanel for ImageViewerPanel {
             // Display the relevant image to the screen
             self.image
                 .set_mat(
-                    images[shared_state.index_of_image_to_show].1.clone(),
+                    Arc::clone(&images[shared_state.index_of_image_to_show].1),
                     &ui.ctx(),
                 )
                 .expect("Error updating image");
         }
         let elapsed = start.elapsed();
-        println!("Took {} seconds to compare mats", elapsed.as_secs_f64());
+        println!("Took {} seconds to set mat", elapsed.as_secs_f64());
 
         match self.image.get_texture() {
             Some(texture) => {

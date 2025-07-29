@@ -33,7 +33,7 @@ impl GUIPanel for SettingsPanel {
     fn draw_ui(&mut self, ui: &mut Ui, shared_state: &mut SharedState) {
         let prev_params = shared_state.params.clone();
 
-        let corner_settings_frame_response = Frame::none().show(ui, |ui| {
+        let corner_settings_frame_response = Frame::new().show(ui, |ui| {
             ui.heading("Corner Detection Settings");
 
             ui.label("Corner threshold mode:");
@@ -47,7 +47,7 @@ impl GUIPanel for SettingsPanel {
 
         ui.separator();
 
-        let target_settings_frame_response = Frame::none().show(ui, |ui| {
+        let target_settings_frame_response = Frame::new().show(ui, |ui| {
             ui.heading("Target Settings").on_hover_text("Tooltip");
 
             Grid::new("settings panel grid").show(ui, |ui| {
@@ -77,7 +77,7 @@ impl GUIPanel for SettingsPanel {
 
         ui.separator();
 
-        let dot_detection_settings_frame_response = Frame::none().show(ui, |ui| {
+        let dot_detection_settings_frame_response = Frame::new().show(ui, |ui| {
             ui.heading("Dot Detection Settings");
 
             // self.corner_threshold_panel.draw_ui(ui, shared_state);

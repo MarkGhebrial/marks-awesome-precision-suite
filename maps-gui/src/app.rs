@@ -6,6 +6,7 @@ use cv::core::Mat;
 use opencv as cv;
 
 use std::sync::mpsc::{Receiver, Sender};
+use std::sync::Arc;
 use std::time::Instant;
 
 use crate::ImageViewerPanel;
@@ -56,7 +57,7 @@ pub struct MyApp {
 
 impl MyApp {
     pub fn new(
-        recv: Receiver<Vec<(String, Mat)>>,
+        recv: Receiver<Vec<(String, Arc<Mat>)>>,
         send: Sender<(Context, MAPSPipelineParams)>,
     ) -> Self {
         Self {

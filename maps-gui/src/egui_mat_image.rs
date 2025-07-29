@@ -1,21 +1,17 @@
 use std::error::Error;
 use std::sync::Arc;
-use std::time::Instant;
 
 use cv::core::Mat;
-use cv::core::MatTraitConst;
-use cv::core::MatTraitConstManual;
 use opencv as cv;
 
 use eframe::egui::{self, load::SizedTexture, TextureId, Vec2};
-use egui::ColorImage;
 use egui::ImageData;
 use egui::TextureOptions;
 
 ///! This module converts images from opencv Mats to egui-compatible types.
 
 pub struct MatImage {
-    mat: Option<Mat>,
+    mat: Option<Arc<Mat>>,
     texture_id: Option<TextureId>,
 }
 
@@ -35,55 +31,28 @@ impl MatImage {
     //     out
     // }
 
-    pub fn set_mat(&mut self, mat: Mat, ctx: &egui::Context) -> Result<(), Box<dyn Error>> {
-        // Make sure the new mat is not the same as the current mat
-        if let Some(current_mat) = &self.mat {
-            if mat.data_bytes()? == current_mat.data_bytes()? {
-                return Ok(());
-            }
-        }
-
-        let start = Instant::now();
-        let color_image = match mat.channels() {
-            1 => ColorImage::from_gray(
-                // The from_gray and from_rgb methods copy all the image bytes in the mat
-                [
-                    mat.size().unwrap().width as usize,
-                    mat.size().unwrap().height as usize,
-                ],
-                mat.data_bytes().unwrap(),
-            ),
-            3 => ColorImage::from_rgb(
-                [
-                    mat.size().unwrap().width as usize,
-                    mat.size().unwrap().height as usize,
-                ],
-                mat.data_bytes().unwrap(),
-            ),
-            _ => panic!(
-                "MatImage loader does not support images with {} channels",
-                mat.channels()
-            ),
-        };
-        let elapsed = start.elapsed();
-        println!(
-            "Took {} seconds to copy Mat to ColorImage",
-            elapsed.as_secs_f64()
-        );
-
-        let image_data = ImageData::Color(Arc::new(color_image));
-
+    pub fn set_mat(&mut self, mat: Arc<Mat>, ctx: &egui::Context) -> Result<(), Box<dyn Error>> {
+        // let start = Instant::now();
         let texture_manager_handle = ctx.tex_manager();
         let mut texture_manager = texture_manager_handle.write();
+        // let elapsed = start.elapsed();
+        // println!("Took {} seconds to acquire lock for texture manager", elapsed.as_secs_f64());
 
         // Free the old texture
+        // let start = Instant::now();
         if let Some(texture_id) = self.texture_id {
             texture_manager.free(texture_id);
         }
+        // let elapsed = start.elapsed();
+        // println!("Took {} seconds to free the old texture", elapsed.as_secs_f64());
 
         // Allocate the new texture
+        // let start = Instant::now();
+
         self.texture_id =
-            Some(texture_manager.alloc("name".into(), image_data, TextureOptions::LINEAR));
+            Some(texture_manager.alloc("name".into(), Arc::clone(&mat), TextureOptions::LINEAR));
+        // let elapsed = start.elapsed();
+        // println!("Took {} seconds to clone the mat and allocate the texture", elapsed.as_secs_f64());
 
         self.mat = Some(mat);
         Ok(())
@@ -94,8 +63,8 @@ impl MatImage {
             Some(SizedTexture {
                 id: texture_id,
                 size: Vec2::from([
-                    mat.size().unwrap().width as f32 / 10.0,
-                    mat.size().unwrap().height as f32 / 10.0,
+                    ImageData::size(mat)[0] as f32,
+                    ImageData::size(mat)[1] as f32,
                 ]),
             })
         } else {

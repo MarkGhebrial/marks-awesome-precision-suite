@@ -2,10 +2,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use std::sync::mpsc::{self, RecvError};
+use std::sync::Arc;
 use std::thread;
 
 use cv::core::Mat;
+use maps_core::pipeline::stages::ConvertColorStage;
+use maps_core::pipeline::PipelineStage;
 use opencv as cv;
+use opencv::imgproc::ColorConversionCodes;
 
 use eframe::egui;
 use egui::Context;
@@ -33,7 +37,7 @@ fn main() {
         ..Default::default()
     };
 
-    let (tx_1, rx_1) = mpsc::channel::<Vec<(String, Mat)>>();
+    let (tx_1, rx_1) = mpsc::channel::<Vec<(String, Arc<Mat>)>>();
 
     let (tx_2, rx_2) = mpsc::channel::<(Context, MAPSPipelineParams)>();
 
@@ -45,20 +49,20 @@ fn main() {
                 Err(RecvError) => break, // The channel has disconnected, so exit the loop and kill the thread
             };
 
-            let mut out = Vec::new();
-
+            
             // TODO: Move all this image processing sequence into a single function in the maps-core crate
-            let img0 = maps_core::load_image();
-
-            let (img1, corners) = maps_core::find_target_corners(&img0, params.corner_thresh_mode);
-
+            let mut img0 = maps_core::load_image();
+            
+            let (mut img1, corners) =
+            maps_core::find_target_corners(&img0, params.corner_thresh_mode);
+            
             let img2 = maps_core::transform_image(
                 &img0,
                 corners,
                 params.target_dimensions.0,
                 params.target_dimensions.1,
             );
-            let img2 = match img2 {
+            let mut img2 = match img2 {
                 Ok(img) => img,
                 Err(_) => {
                     println!("TRANSFORM FAILED!");
@@ -66,12 +70,23 @@ fn main() {
                 }
             };
 
-            let (img3, _points) = maps_core::find_dots(&img2);
-
-            out.push(("Original image".into(), img0));
-            out.push(("Thresholded image (pretransform)".into(), img1));
-            out.push(("Transformed image".into(), img2));
-            out.push(("Final image".into(), img3));
+            let (mut img3, _points) = maps_core::find_dots(&img2);
+            
+            // Do these actually convert to srgb instead of rgba? I have no idea :)
+            let rgb_to_srgb = ConvertColorStage::new(ColorConversionCodes::COLOR_BGR2RGBA);
+            let gray_to_srgb = ConvertColorStage::new(ColorConversionCodes::COLOR_BGR2RGBA);
+            
+            // Convert all the images to srgb so that egui can render them faster
+            rgb_to_srgb.compute(&mut img0);
+            gray_to_srgb.compute(&mut img1);
+            rgb_to_srgb.compute(&mut img2);
+            rgb_to_srgb.compute(&mut img3);
+            
+            let mut out = Vec::new();
+            out.push(("Original image".into(), Arc::new(img0)));
+            out.push(("Thresholded image (pretransform)".into(), Arc::new(img1)));
+            out.push(("Transformed image".into(), Arc::new(img2)));
+            out.push(("Final image".into(), Arc::new(img3)));
             tx_1.send(out).unwrap();
 
             ctx.request_repaint();

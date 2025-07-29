@@ -4,9 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-eframe = "0.30.0"
-egui_extras = { version = "0.30.0", features = ["image"] }
+# eframe = "0.32"
+eframe = { git = "https://github.com/MarkGhebrial/egui", branch = "opencv" }
+# epaint = { version = "0.32", features = [] }
+epaint = { git = "https://github.com/MarkGhebrial/egui", branch = "opencv", features = ["opencv"] }
+egui_extras = { version = "0.32.0", features = ["image"] }
 image = { version = "0.25.5", features = ["jpeg", "png"] }
 maps-core = { path = "../maps-core" }
-opencv = "0.94.2"
+opencv = "0.95"
 

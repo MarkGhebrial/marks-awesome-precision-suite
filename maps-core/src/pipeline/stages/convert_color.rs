@@ -11,12 +11,18 @@ pub struct ConvertColorStage {
 }
 
 impl ConvertColorStage {
+    pub fn new(conversion_code: ColorConversionCodes) -> Self {
+        Self { conversion_code }
+    }
+
+    /// TODO: This should be named rgb_to_grayscale, since it assumes a 3 channel image
     pub fn rgba_to_grayscale() -> Self {
         Self {
             conversion_code: ColorConversionCodes::COLOR_BGR2GRAY,
         }
     }
 
+    /// TODO: See above comment
     pub fn grayscale_to_rgba() -> Self {
         Self {
             conversion_code: ColorConversionCodes::COLOR_GRAY2BGR,
