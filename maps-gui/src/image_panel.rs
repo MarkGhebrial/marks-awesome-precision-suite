@@ -31,7 +31,6 @@ impl ImageViewerPanel {
             recv,
             received_images: None,
             image,
-            // dropdown_selection: "".into(),
         }
     }
 }
@@ -66,9 +65,9 @@ impl GUIPanel for ImageViewerPanel {
             Some(texture) => {
                 let image_widget_response =
                     ui.add(Image::new(ImageSource::Texture(texture)).shrink_to_fit());
-                // let rect = image_widget_response.rect;
-                // rect.x_range();
 
+                // Display the coordinates of the cursor when it's hovering over
+                // the image
                 let hover_pos = image_widget_response.hover_pos();
                 match hover_pos {
                     Some(pos) => {

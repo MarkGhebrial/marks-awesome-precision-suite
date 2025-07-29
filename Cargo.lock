@@ -850,19 +850,10 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 [[package]]
 name = "ecolor"
 version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a631732d995184114016fab22fc7e3faf73d6841c2d7650395fe251fbcd9285"
-dependencies = [
- "emath 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "ecolor"
-version = "0.32.0"
 source = "git+https://github.com/MarkGhebrial/egui?branch=opencv#d2c282a5097ef39a67507d18bff7f2bc74de0299"
 dependencies = [
  "bytemuck",
- "emath 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
+ "emath",
 ]
 
 [[package]]
@@ -873,7 +864,7 @@ dependencies = [
  "ahash",
  "bytemuck",
  "document-features",
- "egui 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
+ "egui",
  "egui-wgpu",
  "egui-winit",
  "egui_glow",
@@ -903,29 +894,13 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8470210c95a42cc985d9ffebfd5067eea55bdb1c3f7611484907db9639675e28"
-dependencies = [
- "ahash",
- "bitflags 2.9.1",
- "emath 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "epaint 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "nohash-hasher",
- "profiling",
- "smallvec",
- "unicode-segmentation",
-]
-
-[[package]]
-name = "egui"
-version = "0.32.0"
 source = "git+https://github.com/MarkGhebrial/egui?branch=opencv#d2c282a5097ef39a67507d18bff7f2bc74de0299"
 dependencies = [
  "accesskit",
  "ahash",
  "bitflags 2.9.1",
- "emath 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
- "epaint 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
+ "emath",
+ "epaint",
  "log",
  "nohash-hasher",
  "profiling",
@@ -941,8 +916,8 @@ dependencies = [
  "ahash",
  "bytemuck",
  "document-features",
- "egui 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
- "epaint 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
+ "egui",
+ "epaint",
  "log",
  "profiling",
  "thiserror 1.0.69",
@@ -961,7 +936,7 @@ dependencies = [
  "ahash",
  "arboard",
  "bytemuck",
- "egui 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
+ "egui",
  "log",
  "profiling",
  "raw-window-handle",
@@ -972,28 +947,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui_extras"
-version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f791a5937f518249016b276b3639ad2aa3824048b6f2161ec2b431ab325880a"
-dependencies = [
- "ahash",
- "egui 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "enum-map",
- "image",
- "log",
- "mime_guess2",
- "profiling",
-]
-
-[[package]]
 name = "egui_glow"
 version = "0.32.0"
 source = "git+https://github.com/MarkGhebrial/egui?branch=opencv#d2c282a5097ef39a67507d18bff7f2bc74de0299"
 dependencies = [
  "ahash",
  "bytemuck",
- "egui 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
+ "egui",
  "glow",
  "log",
  "memoffset",
@@ -1012,12 +972,6 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 [[package]]
 name = "emath"
 version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45f057b141e7e46340c321400be74b793543b1b213036f0f989c35d35957c32e"
-
-[[package]]
-name = "emath"
-version = "0.32.0"
 source = "git+https://github.com/MarkGhebrial/egui?branch=opencv#d2c282a5097ef39a67507d18bff7f2bc74de0299"
 dependencies = [
  "bytemuck",
@@ -1028,26 +982,6 @@ name = "endi"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3d8a32ae18130a3c84dd492d4215c3d913c3b07c6b63c2eb3eb7ff1101ab7bf"
-
-[[package]]
-name = "enum-map"
-version = "2.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6866f3bfdf8207509a033af1a75a7b08abda06bbaaeae6669323fd5a097df2e9"
-dependencies = [
- "enum-map-derive",
-]
-
-[[package]]
-name = "enum-map-derive"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f282cfdfe92516eb26c2af8589c274c7c17681f5ecc03c18255fe741c6aa64eb"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "enumflags2"
@@ -1073,28 +1007,13 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94cca02195f0552c17cabdc02f39aa9ab6fbd815dac60ab1cd3d5b0aa6f9551c"
-dependencies = [
- "ab_glyph",
- "ahash",
- "ecolor 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "emath 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "nohash-hasher",
- "parking_lot",
- "profiling",
-]
-
-[[package]]
-name = "epaint"
-version = "0.32.0"
 source = "git+https://github.com/MarkGhebrial/egui?branch=opencv#d2c282a5097ef39a67507d18bff7f2bc74de0299"
 dependencies = [
  "ab_glyph",
  "ahash",
  "bytemuck",
- "ecolor 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
- "emath 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
+ "ecolor",
+ "emath",
  "epaint_default_fonts",
  "log",
  "nohash-hasher",
@@ -1845,8 +1764,7 @@ name = "maps-gui"
 version = "0.1.0"
 dependencies = [
  "eframe",
- "egui_extras",
- "epaint 0.32.0 (git+https://github.com/MarkGhebrial/egui?branch=opencv)",
+ "epaint",
  "image",
  "maps-core",
  "opencv",
@@ -1884,22 +1802,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "mime"
-version = "0.3.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
-
-[[package]]
-name = "mime_guess2"
-version = "2.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25a3333bb1609500601edc766a39b4c1772874a4ce26022f4d866854dc020c41"
-dependencies = [
- "mime",
- "unicase",
 ]
 
 [[package]]
@@ -3219,12 +3121,6 @@ dependencies = [
  "tempfile",
  "winapi",
 ]
-
-[[package]]
-name = "unicase"
-version = "2.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75b844d17643ee918803943289730bec8aac480150456169e647ed0b576ba539"
 
 [[package]]
 name = "unicode-ident"

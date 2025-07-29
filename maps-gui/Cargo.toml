@@ -8,7 +8,7 @@ edition = "2021"
 eframe = { git = "https://github.com/MarkGhebrial/egui", branch = "opencv" }
 # epaint = { version = "0.32", features = [] }
 epaint = { git = "https://github.com/MarkGhebrial/egui", branch = "opencv", features = ["opencv"] }
-egui_extras = { version = "0.32.0", features = ["image"] }
+# egui_extras = { git = "https://github.com/MarkGhebrial/egui", branch = "opencv", features = ["image"] }
 image = { version = "0.25.5", features = ["jpeg", "png"] }
 maps-core = { path = "../maps-core" }
 opencv = "0.95"

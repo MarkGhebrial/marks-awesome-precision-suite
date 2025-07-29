@@ -1,7 +1,7 @@
 // TODO: This is from the egui template. Do we need it?
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use std::sync::mpsc::{self, RecvError};
+use std::sync::mpsc::{self, RecvError, TryRecvError};
 use std::sync::Arc;
 use std::thread;
 
@@ -43,19 +43,31 @@ fn main() {
 
     // Spawn the thread that'll handle the image processing nonsense
     thread::spawn(move || {
-        loop {
-            let (ctx, params) = match rx_2.recv() {
+        'outer_loop: loop {
+            // Fetch the egui context and pipeline parameters from the main thread
+            let (mut ctx, mut params) = match rx_2.recv() {
                 Ok(p) => p,
-                Err(RecvError) => break, // The channel has disconnected, so exit the loop and kill the thread
+                Err(RecvError) => break 'outer_loop, // The channel has disconnected, so exit the loop and kill the thread
             };
 
-            
+            // Keep polling the channel until the last message is received
+            'recv_loop: loop {
+                match rx_2.try_recv() {
+                    Ok((c, p)) => {
+                        ctx = c;
+                        params = p;
+                    }
+                    Err(TryRecvError::Empty) => break 'recv_loop,
+                    Err(TryRecvError::Disconnected) => break 'outer_loop,
+                }
+            }
+
             // TODO: Move all this image processing sequence into a single function in the maps-core crate
             let mut img0 = maps_core::load_image();
-            
+
             let (mut img1, corners) =
-            maps_core::find_target_corners(&img0, params.corner_thresh_mode);
-            
+                maps_core::find_target_corners(&img0, params.corner_thresh_mode);
+
             let img2 = maps_core::transform_image(
                 &img0,
                 corners,
@@ -71,17 +83,17 @@ fn main() {
             };
 
             let (mut img3, _points) = maps_core::find_dots(&img2);
-            
-            // Do these actually convert to srgb instead of rgba? I have no idea :)
+
+            // Do these actually convert to srgb instead of linear rgba? I have no idea :)
             let rgb_to_srgb = ConvertColorStage::new(ColorConversionCodes::COLOR_BGR2RGBA);
             let gray_to_srgb = ConvertColorStage::new(ColorConversionCodes::COLOR_BGR2RGBA);
-            
+
             // Convert all the images to srgb so that egui can render them faster
             rgb_to_srgb.compute(&mut img0);
             gray_to_srgb.compute(&mut img1);
             rgb_to_srgb.compute(&mut img2);
             rgb_to_srgb.compute(&mut img3);
-            
+
             let mut out = Vec::new();
             out.push(("Original image".into(), Arc::new(img0)));
             out.push(("Thresholded image (pretransform)".into(), Arc::new(img1)));
